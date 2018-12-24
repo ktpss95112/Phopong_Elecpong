@@ -23,6 +23,7 @@ class SceneBase:
 
 
 
+
 class TitleScene(SceneBase):
     user_focus = 0 # 0: start, 1: help, 2: exit
     base_focus_position = pg.Rect(260, 335, 20, 20)
@@ -75,20 +76,24 @@ class TitleScene(SceneBase):
 
 
 
+
+
 class LevelSelectScene(SceneBase):
-    # [0]: 0->level, 1->mode, 2->start
-    # [1]: for mode usage
+    # [0]: 0->level, 1->mode
+    # [1]: 0->classic, 1->classic(advanced), 2->circle
     user_focus = [0, 0]
     user_level = 1
     enter_pressed = False
     up_down_pressed = 0 # -1: down, 0: not, 1: up
+    number_of_mode = 3
+
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_RIGHT: self.user_focus[0] += 1
                 if event.key == pg.K_LEFT:  self.user_focus[0] -= 1
                 if self.user_focus[0] < 0:  self.user_focus[0] = 0
-                if self.user_focus[0] > 2:  self.user_focus[0] = 2
+                if self.user_focus[0] > 1:  self.user_focus[0] = 1
 
                 if event.key == pg.K_UP:   self.up_down_pressed = 1
                 if event.key == pg.K_DOWN: self.up_down_pressed = -1
@@ -102,14 +107,17 @@ class LevelSelectScene(SceneBase):
             self.up_down_pressed = 0
             self.enter_pressed = False
         if self.user_focus[0] == 1:
-            self.user_focus[1] += self.up_down_pressed
+            self.user_focus[1] -= self.up_down_pressed
             if self.user_focus[1] < 0: self.user_focus[1] = 0
-            if self.user_focus[1] > 2: self.user_focus[1] = 2
+            if self.user_focus[1] >= self.number_of_mode: self.user_focus[1] = self.number_of_mode - 1
             self.up_down_pressed = 0
-            self.enter_pressed = False
-        if self.user_focus[0] == 2:
-            if self.enter_pressed: self.SwitchToScene(GameScene(self.user_level))
-            self.enter_pressed = False
+            if self.enter_pressed:
+                if self.user_focus[1] == 0:
+                    self.SwitchToScene(ClassicGameScene(self.user_level, False))
+                if self.user_focus[1] == 1:
+                    self.SwitchToScene(ClassicGameScene(self.user_level, True))
+                if self.user_focus[1] == 2:
+                    self.SwitchToScene(CircleGameScene(self.user_level))
     
     def Render(self, screen):
         screen.fill(pg.Color('white'))
@@ -118,8 +126,6 @@ class LevelSelectScene(SceneBase):
         title_font = pg.font.SysFont(None, 150)
         title_text_level = title_font.render('Level', True, pg.Color('black'))
         title_text_mode = title_font.render('Mode', True, pg.Color('black'))
-
-        # draw
         screen.blit(title_text_level, (200 - title_text_level.get_width() // 2, 80))
         screen.blit(title_text_mode, (600 - title_text_mode.get_width() // 2, 80))
 
@@ -134,24 +140,20 @@ class LevelSelectScene(SceneBase):
 
         # mode selection
         mode_font = pg.font.SysFont(None, 50)
-        modes = ['classic']
-        modes_text = mode_font.render(modes[0], True, pg.Color('black'))
-        screen.blit(modes_text, (600 - modes_text.get_width() // 2, 360))
-
-        # 'start' buttom
-        start_buttom_rect = pg.Rect(0, 0, 80, 50)
-        start_buttom_rect.bottomright = (740, 560)
-        pg.draw.rect(screen, pg.Color('orange'), start_buttom_rect)
+        modes = ['Classic', 'Classic (advanced)', 'Circle']
+        pos_base, delta = 310, 50
+        for i in range(self.number_of_mode):
+            modes_text = mode_font.render(modes[i], True, pg.Color('black'))
+            screen.blit(modes_text, (600 - modes_text.get_width() // 2, pos_base + delta * i))
 
         # focus
         if self.user_focus[0] == 0:
-            pg.draw.rect(screen, pg.Color('red'), level_selection_rect, 10)
+            pg.draw.rect(screen, pg.Color('red'), level_selection_rect, 5)
         if self.user_focus[0] == 1:
             mode_focus_rect = pg.Rect(0, 0, 300, 50)
-            mode_focus_rect.center = (600, 375)
-            pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 10)
-        if self.user_focus[0] == 2:
-            pg.draw.rect(screen, pg.Color('red'), start_buttom_rect, 10)
+            mode_focus_rect.center = (600, pos_base + delta * self.user_focus[1] + 17)
+            pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 5)
+
 
 
 
@@ -178,7 +180,35 @@ class HelpScene(SceneBase):
         screen.blit(title_text, (400 - title_text.get_width() // 2, 130))
 
 
-class GameScene(SceneBase):
+
+
+
+
+
+
+
+class ClassicGameScene(SceneBase):
+    def __init__(self, level, ground_enabled):
+        self.next = self
+        self.level = level
+        self.ground_enabled = ground_enabled
+
+    def ProcessInput(self, events, pressed_keys):
+        pass
+        
+    def Update(self):
+        pass
+    
+    def Render(self, screen):
+        screen.fill(pg.Color('orange'))
+
+
+
+
+
+
+
+class CircleGameScene(SceneBase):
     def __init__(self, level):
         self.next = self
         self.level = level
@@ -190,6 +220,6 @@ class GameScene(SceneBase):
         pass
     
     def Render(self, screen):
-        screen.fill(pg.Color('orange'))
+        screen.fill(pg.Color('pink'))
 
 
