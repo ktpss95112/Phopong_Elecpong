@@ -1,4 +1,4 @@
-import pygame
+import pygame as pg
 
 class SceneBase:
     def __init__(self):
@@ -19,62 +19,146 @@ class SceneBase:
     def Terminate(self):
         self.SwitchToScene(None)
 
+
+
+
+
 class TitleScene(SceneBase):
     user_focus = 0 # 0: start, 1: help, 2: exit
-    base_focus_position = pygame.Rect(260, 335, 20, 20)
+    base_focus_position = pg.Rect(260, 335, 20, 20)
+    enter_pressed = False
     def ProcessInput(self, events, pressed_keys):
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                self.user_focus += 1
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
-                self.user_focus -= 1
-            if self.user_focus < 0: self.user_focus = 0
-            if self.user_focus > 2: self.user_focus = 2
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_DOWN: self.user_focus += 1
+                if event.key == pg.K_UP:   self.user_focus -= 1
+                if self.user_focus < 0: self.user_focus = 0
+                if self.user_focus > 2: self.user_focus = 2
 
-            if event.type == pygame.KEYDOWN and\
-                    (event.key == pygame.K_RETURN or event.key == pygame.K_SPACE):
-                if self.user_focus == 0: self.SwitchToScene(LevelSelectScene())
-                if self.user_focus == 1: self.SwitchToScene(HelpScene())
-                if self.user_focus == 2: self.Terminate()
-
+                if event.key == pg.K_RETURN or event.key == pg.K_SPACE:
+                    self.enter_pressed = True
 
     def Update(self):
-        pass
+        if self.enter_pressed:
+            if self.user_focus == 0: self.SwitchToScene(LevelSelectScene())
+            if self.user_focus == 1: self.SwitchToScene(HelpScene())
+            if self.user_focus == 2: self.Terminate()
+            self.enter_pressed = False
 
     def Render(self, screen):
-        screen.fill((0, 0, 0))
+        screen.fill(pg.Color('black'))
         # TODO: background
 
         # title
-        title_font = pygame.font.SysFont(None, 150)
-        title_text = title_font.render('Title Here', True, (255, 255, 255))
+        title_font = pg.font.SysFont(None, 150)
+        title_text = title_font.render('Title Here', True, pg.Color('white'))
 
         # options
-        options_font = pygame.font.SysFont(None, 50)
-        start_text = options_font.render('Start', True, (255, 255, 255))
-        help_text = options_font.render('Help (Rules)', True, (255, 255, 255))
-        exit_text = options_font.render('Exit', True, (255, 255, 255))
+        options_font = pg.font.SysFont(None, 50)
+        start_text = options_font.render('Start', True, pg.Color('white'))
+        help_text = options_font.render('Help (Rules)', True, pg.Color('white'))
+        exit_text = options_font.render('Exit', True, pg.Color('white'))
 
         # draw
         screen.blit(title_text, (400 - title_text.get_width() // 2, 130))
         screen.blit(start_text, (300, 330))
         screen.blit(help_text, (300, 380))
         screen.blit(exit_text, (300, 430))
-        pygame.draw.rect(
+        pg.draw.rect(
             screen,
-            (255, 255, 255),
+            pg.Color('white'),
             self.base_focus_position.move(0, 50*self.user_focus)
         )
 
+
+
+
+
+
 class LevelSelectScene(SceneBase):
+    # [0]: 0->level, 1->mode, 2->start
+    # [1]: for mode usage
+    user_focus = [0, 0]
+    user_level = 1
+    enter_pressed = False
+    up_down_pressed = 0 # -1: down, 0: not, 1: up
     def ProcessInput(self, events, pressed_keys):
-        pass
+        for event in events:
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_RIGHT: self.user_focus[0] += 1
+                if event.key == pg.K_LEFT:  self.user_focus[0] -= 1
+                if self.user_focus[0] < 0:  self.user_focus[0] = 0
+                if self.user_focus[0] > 2:  self.user_focus[0] = 2
+
+                if event.key == pg.K_UP:   self.up_down_pressed = 1
+                if event.key == pg.K_DOWN: self.up_down_pressed = -1
+
+                if event.key == pg.K_RETURN or event.key == pg.K_SPACE:
+                    self.enter_pressed = True
         
     def Update(self):
-        pass
+        if self.user_focus[0] == 0:
+            self.user_level = (self.user_level - 1 + self.up_down_pressed + 7) % 7 + 1
+            self.up_down_pressed = 0
+            self.enter_pressed = False
+        if self.user_focus[0] == 1:
+            self.user_focus[1] += self.up_down_pressed
+            if self.user_focus[1] < 0: self.user_focus[1] = 0
+            if self.user_focus[1] > 2: self.user_focus[1] = 2
+            self.up_down_pressed = 0
+            self.enter_pressed = False
+        if self.user_focus[0] == 2:
+            if self.enter_pressed: self.SwitchToScene(GameScene(self.user_level))
+            self.enter_pressed = False
     
     def Render(self, screen):
-        screen.fill((255, 255, 255))
+        screen.fill(pg.Color('white'))
+
+        # title
+        title_font = pg.font.SysFont(None, 150)
+        title_text_level = title_font.render('Level', True, pg.Color('black'))
+        title_text_mode = title_font.render('Mode', True, pg.Color('black'))
+
+        # draw
+        screen.blit(title_text_level, (200 - title_text_level.get_width() // 2, 80))
+        screen.blit(title_text_mode, (600 - title_text_mode.get_width() // 2, 80))
+
+        # level selection
+        level_selection_rect = pg.Rect(0, 0, 80, 100)
+        level_selection_rect.center = (200, 380)
+        pg.draw.rect(screen, pg.Color('black'), level_selection_rect) # backgroound
+        level_font = pg.font.SysFont(None, 50)
+        level_text = level_font.render(f'{self.user_level}', True, pg.Color('yellow'))
+        screen.blit(level_text, (200 - level_text.get_width() // 2, 360))
+        # TODO: add little triangle above and below the rect
+
+        # mode selection
+        mode_font = pg.font.SysFont(None, 50)
+        modes = ['classic']
+        modes_text = mode_font.render(modes[0], True, pg.Color('black'))
+        screen.blit(modes_text, (600 - modes_text.get_width() // 2, 360))
+
+        # 'start' buttom
+        start_buttom_rect = pg.Rect(0, 0, 80, 50)
+        start_buttom_rect.bottomright = (740, 560)
+        pg.draw.rect(screen, pg.Color('orange'), start_buttom_rect)
+
+        # focus
+        if self.user_focus[0] == 0:
+            pg.draw.rect(screen, pg.Color('red'), level_selection_rect, 10)
+        if self.user_focus[0] == 1:
+            mode_focus_rect = pg.Rect(0, 0, 300, 50)
+            mode_focus_rect.center = (600, 375)
+            pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 10)
+        if self.user_focus[0] == 2:
+            pg.draw.rect(screen, pg.Color('red'), start_buttom_rect, 10)
+
+
+
+
+
+
+
 
 class HelpScene(SceneBase):
     def ProcessInput(self, events, pressed_keys):
@@ -84,8 +168,28 @@ class HelpScene(SceneBase):
         pass
     
     def Render(self, screen):
-        screen.fill((255, 255, 255))
+        screen.fill(pg.Color('white'))
+
+        # title
+        title_font = pg.font.SysFont(None, 150)
+        title_text = title_font.render('Help Title', True, pg.Color('black'))
+
+        # draw
+        screen.blit(title_text, (400 - title_text.get_width() // 2, 130))
 
 
+class GameScene(SceneBase):
+    def __init__(self, level):
+        self.next = self
+        self.level = level
+
+    def ProcessInput(self, events, pressed_keys):
+        pass
+        
+    def Update(self):
+        pass
+    
+    def Render(self, screen):
+        screen.fill(pg.Color('orange'))
 
 
