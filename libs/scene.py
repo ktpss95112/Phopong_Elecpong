@@ -1,5 +1,46 @@
 import pygame as pg
 
+
+def startWithScene(s):
+    pg.init()
+    screen = pg.display.set_mode((800, 600))
+    clock = pg.time.Clock()
+
+    current_scene = s
+
+    while current_scene != None:
+        pressed_keys = pg.key.get_pressed()
+        filtered_events = []
+        for event in pg.event.get():
+            quit_attempt = False
+            if event.type == pg.QUIT:
+                quit_attempt = True
+            elif event.type == pg.KEYDOWN:
+                alt_pressed = pressed_keys[pg.K_LALT] or \
+                              pressed_keys[pg.K_RALT]
+                if event.key == pg.K_F4 and alt_pressed:
+                    quit_attempt = True
+            
+            if quit_attempt: current_scene.Terminate()
+            else:            filtered_events.append(event)
+
+        current_scene.ProcessInput(filtered_events, pressed_keys)
+        current_scene.Update()
+        current_scene.Render(screen)
+
+        current_scene = current_scene.next
+
+        pg.display.flip()
+        clock.tick(60)
+
+
+
+
+
+
+
+
+
 class SceneBase:
     def __init__(self):
         self.next = self
@@ -18,6 +59,8 @@ class SceneBase:
     
     def Terminate(self):
         self.SwitchToScene(None)
+
+
 
 
 
@@ -70,6 +113,7 @@ class TitleScene(SceneBase):
             pg.Color('white'),
             self.base_focus_position.move(0, 50*self.user_focus)
         )
+
 
 
 
@@ -154,6 +198,10 @@ class LevelSelectScene(SceneBase):
             mode_focus_rect.center = (600, pos_base + delta * self.user_focus[1] + 17)
             pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 5)
 
+        # TODO:
+        # image to give hint of press enter
+        # highlight when focus is on modes, and vice versa
+
 
 
 
@@ -187,6 +235,7 @@ class HelpScene(SceneBase):
 
 
 
+
 class ClassicGameScene(SceneBase):
     def __init__(self, level, ground_enabled):
         self.next = self
@@ -200,7 +249,9 @@ class ClassicGameScene(SceneBase):
         pass
     
     def Render(self, screen):
-        screen.fill(pg.Color('orange'))
+        screen.fill(pg.Color('black'))
+
+
 
 
 
@@ -223,3 +274,10 @@ class CircleGameScene(SceneBase):
         screen.fill(pg.Color('pink'))
 
 
+
+
+
+
+
+if __name__ == '__main__':
+    startWithScene(ClassicGameScene(1, True))
