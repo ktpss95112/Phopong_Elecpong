@@ -5,7 +5,6 @@ from OtherObjects import *
 
 
 def startWithScene(s):
-    pg.init()
     screen = pg.display.set_mode((800, 600))
     clock = pg.time.Clock()
 
@@ -252,7 +251,6 @@ class ClassicGameScene(SceneBase):
     velocity_of_medal = vec2(2, 0)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
 
-
     def new_photons(self):
         # parameters: center_pos, vel
         return [ element.Photon((400 + self.photon_distance * i, 0), self.velocity_of_photon)\
@@ -263,10 +261,12 @@ class ClassicGameScene(SceneBase):
         self.level = level # 1:easy, 7:hard
         self.ground_enabled = ground_enabled
         self.photons.append(self.new_photons())
+        self.score = Score(70, 'pink', topright=(800 - 20, 20))
 
     def generate_electron(self, pos, vel):
         # pos -> pg.Rect()
         self.electrons.append(element.Electron(pos, vel))
+
 
     left_right_pressed = 0 # {-1, 0, 1}
     space_pressed = False
@@ -306,6 +306,7 @@ class ClassicGameScene(SceneBase):
             if photon.inside(self.horizon_rect):
                 self.photons[0].remove(photon)
             elif photon.collide_with(self.medal_rect):
+                self.score.update(5 * photon.color_n)
                 if photon.color_n >= self.level:
                     self.generate_electron(photon.pos.center, vec2(0, -photon.color_n))
                 self.photons[0].remove(photon)
@@ -326,6 +327,8 @@ class ClassicGameScene(SceneBase):
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
         pg.draw.rect(screen, pg.Color('gray77'), self.medal_rect)
 
+        # score
+        self.score.draw(screen)
 
 
 
@@ -355,6 +358,7 @@ class CircleGameScene(SceneBase):
 
 
 if __name__ == '__main__':
-    startWithScene(TitleScene())
+    pg.init()
+    #startWithScene(TitleScene())
     #startWithScene(LevelSelectScene())
-    #startWithScene(ClassicGameScene(1, True))
+    startWithScene(ClassicGameScene(4, True))

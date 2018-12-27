@@ -1,6 +1,6 @@
 import pygame as pg
 
-__all__ = ['PureText', 'ScoreNumber', 'MedalStatusBar']
+__all__ = ['PureText', 'Score', 'MedalStatusBar']
 
 
 class PureText():
@@ -19,19 +19,21 @@ class PureText():
 
 
 
-class ScoreNumber():
+class Score():
     score_number = 0
 
     def __init__(self, size, color, font=None, **pos):
         """
         pos: refer to the attributes of pg.Rect
         """
+        self.color = color
         self.font = pg.font.SysFont(font, size)
-        self.text_surface = font.render(f'{self.score_number:{0}{4}}', True, pg.Color(color))
-        self.pos_rect = self.text_surface.get_rect(pos)
+        self.text_surface = self.font.render(f'Score  {self.score_number:{0}{4}}', True, pg.Color(self.color))
+        self.pos_rect = self.text_surface.get_rect(**pos)
 
     def update(self, increment):
         self.score_number += increment
+        self.text_surface = self.font.render(f'Score  {self.score_number:{0}{4}}', True, pg.Color(self.color))
 
     def draw(self, screen):
         screen.blit(self.text_surface, self.pos_rect)
