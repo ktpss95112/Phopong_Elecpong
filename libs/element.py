@@ -6,7 +6,7 @@ random.seed()
 class Particle():
     """
     Particles.pos -> pg.Rect
-    Particles.vel -> tuple like (x, y)
+    Particles.vel -> pygame.math.Vector2
     """
     radius = 10
     def __init__(self, center_position, velocity, spe_args=None):
@@ -19,7 +19,7 @@ class Particle():
         pass
 
     def update_pos(self):
-        self.pos.move_ip(*self.vel)
+        self.pos.center += self.vel
 
     def collide_with(self, rect):
         return self.pos.colliderect(rect)

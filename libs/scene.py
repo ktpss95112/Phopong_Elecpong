@@ -1,4 +1,5 @@
 import pygame as pg
+from pygame.math import Vector2 as vec2
 import element
 
 
@@ -243,10 +244,11 @@ class ClassicGameScene(SceneBase):
     electrons = []
     photon_distance = 80
     line_of_horizon = 600 - 40
-    velocity_of_photon = (0, 2)
+    velocity_of_photon = vec2(0, 2)
     horizon_rect = pg.Rect(0, line_of_horizon, 800, 600 - line_of_horizon)
-    medal_pos = [400, 600 - 60]
     medal_rect = pg.Rect(0, 0, 70, 10)
+    medal_rect.center = (400, 600 - 60)
+    velocity_of_medal = vec2(2, 0)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
 
 
@@ -265,12 +267,25 @@ class ClassicGameScene(SceneBase):
         # pos -> pg.Rect()
         self.electrons.append(element.Electron(pos, vel))
 
+    left_right_pressed = 0 # {-1, 0, 1}
+    space_pressed = False
     def ProcessInput(self, events, pressed_keys):
-        pass
+        if pressed_keys[pg.K_LEFT]:  self.left_right_pressed -= 1
+        if pressed_keys[pg.K_RIGHT]: self.left_right_pressed += 1
+
+        for event in events:
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    self.space_pressed = True
         
     def Update(self):
+        # update medal position
+        self.medal_rect.center += self.left_right_pressed * self.velocity_of_medal
+        self.left_right_pressed = 0
+        if self.medal_rect.centerx < 50:  self.medal_rect.centerx = 50
+        if self.medal_rect.centerx > 750: self.medal_rect.centerx = 750
+
         # update photon position
-        self.medal_rect.center = self.medal_pos
         for sub_photons in self.photons:
             for photon in sub_photons:
                 photon.update_pos()
@@ -291,7 +306,7 @@ class ClassicGameScene(SceneBase):
                 self.photons[0].remove(photon)
             elif photon.collide_with(self.medal_rect):
                 if photon.color_n >= self.level:
-                    self.generate_electron(photon.pos.center, (0, -photon.color_n))
+                    self.generate_electron(photon.pos.center, vec2(0, -photon.color_n))
                 self.photons[0].remove(photon)
         if not self.photons[0]:
             del self.photons[0]
@@ -304,7 +319,7 @@ class ClassicGameScene(SceneBase):
             for photon in sub_photons:
                 pg.draw.rect(screen, pg.Color(photon.color), photon.pos)
         for electron in self.electrons:
-            pg.draw.rect(screen, pg.Color('olivedrab'), electron.pos)
+            pg.draw.rect(screen, pg.Color('gray40'), electron.pos)
 
         # horizon
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
