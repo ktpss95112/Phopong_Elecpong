@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame.math import Vector2 as vec2
 import element
+from OtherObjects import *
 
 
 def startWithScene(s):
@@ -44,6 +45,9 @@ def startWithScene(s):
 
 
 class SceneBase:
+    line_of_horizon = 600 - 40
+    horizon_rect = pg.Rect(0, line_of_horizon, 800, 600 - line_of_horizon)
+
     def __init__(self):
         self.next = self
     
@@ -71,8 +75,8 @@ class SceneBase:
 
 class TitleScene(SceneBase):
     user_focus = 0 # 0: start, 1: help, 2: exit
-    base_focus_position = pg.Rect(260, 335, 20, 20)
     enter_pressed = False
+
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.KEYDOWN:
@@ -81,6 +85,7 @@ class TitleScene(SceneBase):
                 if self.user_focus < 0: self.user_focus = 0
                 if self.user_focus > 2: self.user_focus = 2
 
+            elif event.type == pg.KEYUP:
                 if event.key == pg.K_RETURN or event.key == pg.K_SPACE:
                     self.enter_pressed = True
 
@@ -96,26 +101,25 @@ class TitleScene(SceneBase):
         # TODO: background
 
         # title
-        title_font = pg.font.SysFont(None, 150)
-        title_text = title_font.render('Title Here', True, pg.Color('white'))
+        title_text = PureText('Title Here', 150, 'white', center=(400, 180))
+        title_text.draw(screen)
 
         # options
-        options_font = pg.font.SysFont(None, 50)
-        start_text = options_font.render('Start', True, pg.Color('white'))
-        help_text = options_font.render('Help (Rules)', True, pg.Color('white'))
-        exit_text = options_font.render('Exit', True, pg.Color('white'))
+        base_pos_y, delta_y = 315, 60
+        start_text = PureText('Start', 50, 'white', center=(400, base_pos_y))
+        help_text = PureText('Help', 50, 'white', center=(400, base_pos_y + delta_y))
+        exit_text = PureText('Exit', 50, 'white', center=(400, base_pos_y + 2 * delta_y))
+        start_text.draw(screen)
+        help_text.draw(screen)
+        exit_text.draw(screen)
 
-        # draw
-        screen.blit(title_text, (400 - title_text.get_width() // 2, 130))
-        screen.blit(start_text, (300, 330))
-        screen.blit(help_text, (300, 380))
-        screen.blit(exit_text, (300, 430))
-        pg.draw.rect(
-            screen,
-            pg.Color('white'),
-            self.base_focus_position.move(0, 50*self.user_focus)
-        )
+        # focus buttom
+        focus_rect = pg.Rect(0, 0, 15, 15)
+        focus_rect.center = (330, base_pos_y + self.user_focus * delta_y)
+        pg.draw.rect(screen, pg.Color('pink'), focus_rect)
 
+        # horizon
+        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
 
 
 
@@ -144,6 +148,7 @@ class LevelSelectScene(SceneBase):
                 if event.key == pg.K_UP:   self.up_down_pressed = 1
                 if event.key == pg.K_DOWN: self.up_down_pressed = -1
 
+            elif event.type == pg.KEYUP:
                 if event.key == pg.K_RETURN or event.key == pg.K_SPACE:
                     self.enter_pressed = True
         
@@ -166,39 +171,36 @@ class LevelSelectScene(SceneBase):
                     self.SwitchToScene(CircleGameScene(self.level))
     
     def Render(self, screen):
-        screen.fill(pg.Color('white'))
+        screen.fill(pg.Color('black'))
 
         # title
-        title_font = pg.font.SysFont(None, 150)
-        title_text_level = title_font.render('Level', True, pg.Color('black'))
-        title_text_mode = title_font.render('Mode', True, pg.Color('black'))
-        screen.blit(title_text_level, (200 - title_text_level.get_width() // 2, 80))
-        screen.blit(title_text_mode, (600 - title_text_mode.get_width() // 2, 80))
-
+        title_level_text = PureText('Level', 150, 'white', center=(200, 150))
+        title_mode_text = PureText('Mode', 150, 'white', center=(570, 150))
+        title_level_text.draw(screen)
+        title_mode_text.draw(screen)
+        
         # level selection
-        level_selection_rect = pg.Rect(0, 0, 80, 100)
-        level_selection_rect.center = (200, 380)
-        pg.draw.rect(screen, pg.Color('black'), level_selection_rect) # backgroound
-        level_font = pg.font.SysFont(None, 50)
-        level_text = level_font.render(f'{self.level}', True, pg.Color('yellow'))
-        screen.blit(level_text, (200 - level_text.get_width() // 2, 360))
+        level_selection_text = PureText(f'{self.level}', 80, 'white', center=(200, 380))
+        level_selection_text.draw(screen)
         # TODO: add little triangle above and below the rect
 
         # mode selection
-        mode_font = pg.font.SysFont(None, 50)
         modes = ['Classic', 'Classic (advanced)', 'Circle']
-        pos_base, delta = 310, 50
+        base_pos_y, delta_y = 330, 65
         for i in range(self.number_of_mode):
-            modes_text = mode_font.render(modes[i], True, pg.Color('black'))
-            screen.blit(modes_text, (600 - modes_text.get_width() // 2, pos_base + delta * i))
+            mode_text = PureText(modes[i], 50, 'white', center=(570, base_pos_y + i * delta_y))
+            mode_text.draw(screen)
 
         # focus
         if self.user_focus[0] == 0:
-            pg.draw.rect(screen, pg.Color('red'), level_selection_rect, 5)
+            pg.draw.rect(screen, pg.Color('red'), pg.Rect(level_selection_text.pos_rect).inflate(35, 35).move(0, -3), 5)
         if self.user_focus[0] == 1:
-            mode_focus_rect = pg.Rect(0, 0, 300, 50)
-            mode_focus_rect.center = (600, pos_base + delta * self.user_focus[1] + 17)
+            mode_focus_rect = pg.Rect(0, 0, 340, 50)
+            mode_focus_rect.center = (570, base_pos_y + delta_y * self.user_focus[1])
             pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 5)
+
+        # horizon
+        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
 
         # TODO:
         # image to give hint of press enter
@@ -220,14 +222,15 @@ class HelpScene(SceneBase):
         pass
     
     def Render(self, screen):
-        screen.fill(pg.Color('white'))
+        screen.fill(pg.Color('black'))
 
         # title
-        title_font = pg.font.SysFont(None, 150)
-        title_text = title_font.render('Help Title', True, pg.Color('black'))
+        title_text = PureText('Help Title', 150, 'white', center=(400, 150))
+        title_text.draw(screen)
 
-        # draw
-        screen.blit(title_text, (400 - title_text.get_width() // 2, 130))
+        # horizon
+        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
+
 
 
 
@@ -243,9 +246,7 @@ class ClassicGameScene(SceneBase):
     photons_per_line = 7 # should be odd number
     electrons = []
     photon_distance = 80
-    line_of_horizon = 600 - 40
     velocity_of_photon = vec2(0, 2)
-    horizon_rect = pg.Rect(0, line_of_horizon, 800, 600 - line_of_horizon)
     medal_rect = pg.Rect(0, 0, 70, 10)
     medal_rect.center = (400, 600 - 60)
     velocity_of_medal = vec2(2, 0)
@@ -321,7 +322,7 @@ class ClassicGameScene(SceneBase):
         for electron in self.electrons:
             pg.draw.rect(screen, pg.Color('gray40'), electron.pos)
 
-        # horizon
+        # horizon & medal
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
         pg.draw.rect(screen, pg.Color('gray77'), self.medal_rect)
 
@@ -354,5 +355,6 @@ class CircleGameScene(SceneBase):
 
 
 if __name__ == '__main__':
+    startWithScene(TitleScene())
     #startWithScene(LevelSelectScene())
-    startWithScene(ClassicGameScene(1, True))
+    #startWithScene(ClassicGameScene(1, True))
