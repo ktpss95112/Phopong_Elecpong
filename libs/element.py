@@ -9,6 +9,7 @@ class Particle():
     Particles.vel -> pygame.math.Vector2
     """
     radius = 10
+    color = None
     def __init__(self, center_position, velocity, spe_args=None):
         self.pos = pg.Rect(0, 0, self.radius, self.radius)
         self.pos.center = center_position
@@ -27,6 +28,9 @@ class Particle():
     def inside(self, rect):
         return rect.contains(self.pos)
 
+    def draw(self, screen):
+        pg.draw.rect(screen, pg.Color(self.color), self.pos)
+
 
 
 
@@ -43,6 +47,7 @@ class Photon(Particle):
 
 
 class Electron(Particle):
+    color = 'gray77'
     def specific_init(self, args):
         pass
 

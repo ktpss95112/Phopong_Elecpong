@@ -239,6 +239,18 @@ class HelpScene(SceneBase):
 
 
 
+class GameBridgeScene(SceneBase):
+    pass
+
+
+
+
+
+
+
+
+
+
 
 class ClassicGameScene(SceneBase):
     photons = []
@@ -246,22 +258,25 @@ class ClassicGameScene(SceneBase):
     electrons = []
     photon_distance = 80
     velocity_of_photon = vec2(0, 2)
-    medal_rect = pg.Rect(0, 0, 70, 10)
-    medal_rect.center = (400, 600 - 60)
-    velocity_of_medal = vec2(2, 0)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
+    time_remain = 5
 
     def new_photons(self):
         # parameters: center_pos, vel
         return [ element.Photon((400 + self.photon_distance * i, 0), self.velocity_of_photon)\
             for i in range(-self.photons_per_line//2+1, self.photons_per_line//2+1) ]
 
-    def __init__(self, level, ground_enabled):
+    def __init__(self, level, charge_enabled):
         self.next = self
         self.level = level # 1:easy, 7:hard
-        self.ground_enabled = ground_enabled
+        self.charge_enabled = charge_enabled
         self.photons.append(self.new_photons())
         self.score = Score(70, 'pink', topright=(800 - 20, 20))
+        self.medal = Medal()
+        self.medal_status = MedalStatusBar((800 - 15, 280))
+        self.ground = [Ground(10), Ground(790)]
+        self.countdown = CountDown(self.time_remain, 70, 'pink', topleft=(20, 20))
+        self.countdown.start_tick()
 
     def generate_electron(self, pos, vel):
         # pos -> pg.Rect()
@@ -281,10 +296,8 @@ class ClassicGameScene(SceneBase):
         
     def Update(self):
         # update medal position
-        self.medal_rect.center += self.left_right_pressed * self.velocity_of_medal
+        self.medal.update(self.left_right_pressed)
         self.left_right_pressed = 0
-        if self.medal_rect.centerx < 50:  self.medal_rect.centerx = 50
-        if self.medal_rect.centerx > 750: self.medal_rect.centerx = 750
 
         # update photon position
         for sub_photons in self.photons:
@@ -305,13 +318,30 @@ class ClassicGameScene(SceneBase):
         for photon in self.photons[0]:
             if photon.inside(self.horizon_rect):
                 self.photons[0].remove(photon)
-            elif photon.collide_with(self.medal_rect):
-                self.score.update(5 * photon.color_n)
-                if photon.color_n >= self.level:
-                    self.generate_electron(photon.pos.center, vec2(0, -photon.color_n))
+            elif photon.collide_with(self.medal.pos_rect):
+                increment = 0
+                if (not self.charge_enabled) and photon.color_n >= self.level:
+                    increment = photon.color_n
+                elif self.charge_enabled and photon.color_n >= self.level:
+                    increment = photon.color_n * (1 - self.medal_status.charge / 100)
+
+                if increment != 0:
+                    self.medal.set_highlight()
+                    self.score.update(int(5 * increment))
+                    self.medal_status.update(photon.color_n)
+                    self.generate_electron(photon.pos.center, vec2(0, -increment))
+
                 self.photons[0].remove(photon)
         if not self.photons[0]:
             del self.photons[0]
+
+        # ground (recharge)
+        # TODO: change color when charging
+        if self.medal.pos_rect.collidelist([ g.pos_rect for g in self.ground ]) != -1:
+            self.medal_status.update(-5)
+
+        # update timer
+        self.countdown.update()
     
     def Render(self, screen):
         screen.fill(pg.Color('black'))
@@ -319,18 +349,32 @@ class ClassicGameScene(SceneBase):
         # photons & electrons
         for sub_photons in self.photons:
             for photon in sub_photons:
-                pg.draw.rect(screen, pg.Color(photon.color), photon.pos)
+                photon.draw(screen)
         for electron in self.electrons:
-            pg.draw.rect(screen, pg.Color('gray40'), electron.pos)
+            electron.draw(screen)
 
-        # horizon & medal
+        # horizon
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
-        pg.draw.rect(screen, pg.Color('gray77'), self.medal_rect)
+
+        # ground
+        self.ground[0].draw(screen)
+        self.ground[1].draw(screen)
+        
+        # medal
+        self.medal.draw(screen)
+
+        # time remain
+        self.countdown.draw(screen)
 
         # score
         self.score.draw(screen)
 
+        # medal status
+        if self.charge_enabled:
+            self.medal_status.draw(screen)
 
+        # times up!
+        if self.countdown.time_remain == 0: self.SwitchToScene(EndBridgeScene(screen))
 
 
 
@@ -344,12 +388,59 @@ class CircleGameScene(SceneBase):
 
     def ProcessInput(self, events, pressed_keys):
         pass
-        
+
     def Update(self):
         pass
-    
+
     def Render(self, screen):
         screen.fill(pg.Color('pink'))
+
+
+
+
+
+
+
+
+class EndBridgeScene(SceneBase):
+    def __init__(self, screen):
+        self.next = self
+        self.freezed_screen = screen
+        # parameters excluding time_remain is arbitrary
+        self.countdown = CountDown(3, 0, 'black', center=(0, 0))
+        self.countdown.start_tick()
+
+    def ProcessInput(self, events, pressed_keys):
+        pass
+
+    def Update(self):
+        self.countdown.update()
+        if self.countdown.time_remain == 0: self.SwitchToScene(EndScene())
+
+    def Render(self, screen):
+        screen.blit(self.freezed_screen, self.freezed_screen.get_rect())
+
+
+
+
+
+
+
+
+
+class EndScene(SceneBase):
+    def __init__(self):
+        self.next = self
+
+    def ProcessInput(self, events, pressed_keys):
+        pass
+
+    def Update(self):
+        pass
+
+    def Render(self, screen):
+        screen.fill(pg.Color('black'))
+
 
 
 
@@ -361,4 +452,4 @@ if __name__ == '__main__':
     pg.init()
     #startWithScene(TitleScene())
     #startWithScene(LevelSelectScene())
-    startWithScene(ClassicGameScene(4, True))
+    startWithScene(ClassicGameScene(1, True))
