@@ -1,7 +1,7 @@
 import pygame as pg
 from pygame.math import Vector2 as vec2
 
-__all__ = ['PureText', 'Score', 'CountDown', 'Medal', 'MedalStatusBar', 'Ground']
+__all__ = ['PureText', 'FlashingText', 'Score', 'CountDown', 'Medal', 'MedalStatusBar', 'Ground']
 
 
 class PureText():
@@ -15,6 +15,31 @@ class PureText():
 
     def draw(self, screen):
         screen.blit(self.text_surface, self.pos_rect)
+
+
+
+
+
+
+
+
+class FlashingText(PureText):
+    period = 80
+
+    def __init__(self, text, size, color, font=None, **pos):
+        """
+        pos: refer to the attributes of pg.Rect
+        """
+        super().__init__(text, size, color, font, **pos)
+        self.time_count = 0
+
+    def update(self):
+        self.time_count = (self.time_count + 1) % self.period
+
+    def draw(self, screen):
+        if self.time_count < self.period // 2:
+            screen.blit(self.text_surface, self.pos_rect)
+
 
 
 
