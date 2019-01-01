@@ -174,12 +174,18 @@ class MedalStatusBar():
 class Ground():
     color = 'white'
 
-    def __init__(self, centerx):
-        self.pos_rect = pg.Rect(0, 0, 50, 40)
-        self.pos_rect.midbottom = (centerx, 600 - 30)
+    def __init__(self):
+        self.ground_l = scaled_surface(pg.image.load(os.path.join(data_path, 'ground.png')), 0.5)
+        self.ground_r = pg.transform.flip(self.ground_l, True, False)
+        self.pos_rect_l = self.ground_l.get_rect(bottomleft=(0, 600 - 38))
+        self.pos_rect_r = self.ground_r.get_rect(bottomright=(800, 600 - 38))
+        #self.pos_rect = pg.Rect(0, 0, 50, 40)
+        #self.pos_rect.midbottom = (centerx, 600 - 30)
 
     def draw(self, screen):
-        pg.draw.rect(screen, pg.Color(self.color), self.pos_rect)
+        screen.blit(self.ground_l, self.pos_rect_l)
+        screen.blit(self.ground_r, self.pos_rect_r)
+        #pg.draw.rect(screen, pg.Color(self.color), self.pos_rect)
 
 
 

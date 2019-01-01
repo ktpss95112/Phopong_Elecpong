@@ -319,7 +319,7 @@ class ClassicGameScene(SceneBase):
         self.score = Score(60, 'pink', topright=(800 - 15, 15))
         self.medal = Medal()
         self.medal_status = MedalStatusBar((800 - 15, 280))
-        self.ground = [Ground(10), Ground(790)]
+        self.ground = Ground()
         self.countdown = CountDown(self.time_remain, 60, 'pink', topleft=(15, 15))
         self.countdown.start_tick()
         line_of_horizon2 = 600 - 30
@@ -385,7 +385,7 @@ class ClassicGameScene(SceneBase):
 
         # ground (recharge)
         # TODO: change color when charging
-        if self.medal.pos_rect.collidelist([ g.pos_rect for g in self.ground ]) != -1:
+        if self.medal.pos_rect.collidelist([ self.ground.pos_rect_l, self.ground.pos_rect_r ]) != -1:
             self.medal_status.update(-5)
 
         # update timer
@@ -408,8 +408,7 @@ class ClassicGameScene(SceneBase):
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect2)
 
         # ground
-        self.ground[0].draw(screen)
-        self.ground[1].draw(screen)
+        self.ground.draw(screen)
 
         # medal
         self.medal.draw(screen)
