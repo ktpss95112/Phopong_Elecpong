@@ -1,12 +1,15 @@
 import pygame as pg
 from pygame.math import Vector2 as vec2
 
+import os.path
 if __name__ == '__main__':
     import element
     from OtherObjects import *
+    data_path = os.path.join('..', 'data')
 else:
     import libs.element as element
     from libs.OtherObjects import *
+    data_path = 'data'
 
 
 def startWithScene(s):
@@ -105,14 +108,18 @@ class TitleScene(SceneBase):
         # TODO: background
 
         # title
-        title_text = PureText('Title Here', 150, 'white', center=(400, 180))
-        title_text.draw(screen)
+        for i in (1, 2):
+            image = pg.image.load(os.path.join(data_path, 'Title', f'title_{i}.png'))
+            scale = 0.8
+            image = pg.transform.smoothscale(image, (int(scale * image.get_width()), int(scale * image.get_height())))
+            screen.blit(image, image.get_rect(center=(400, i * 100)))
+
 
         # options
-        base_pos_y, delta_y = 315, 60
-        start_text = PureText('Start', 50, 'white', center=(400, base_pos_y))
-        help_text = PureText('Help', 50, 'white', center=(400, base_pos_y + delta_y))
-        exit_text = PureText('Exit', 50, 'white', center=(400, base_pos_y + 2 * delta_y))
+        base_pos_y, delta_y = 330, 55
+        start_text = PureText('Start', 55, 'white', center=(400, base_pos_y))
+        help_text = PureText('Help', 55, 'white', center=(400, base_pos_y + delta_y))
+        exit_text = PureText('Exit', 55, 'white', center=(400, base_pos_y + 2 * delta_y))
         start_text.draw(screen)
         help_text.draw(screen)
         exit_text.draw(screen)
@@ -186,7 +193,7 @@ class HelpScene(SceneBase):
 
 class LevelSelectScene(SceneBase):
     # [0]: 0->level, 1->mode
-    # [1]: 0->classic, 1->classic(advanced), 2->circle
+    # [1]: 0->classic, 1->advanced
     user_focus = [0, 0]
     level = 1
     enter_pressed = False
@@ -218,15 +225,13 @@ class LevelSelectScene(SceneBase):
         if self.user_focus[0] == 1:
             self.user_focus[1] -= self.up_down_pressed
             if self.user_focus[1] < 0: self.user_focus[1] = 0
-            if self.user_focus[1] > 2: self.user_focus[1] = 2
+            if self.user_focus[1] > 1: self.user_focus[1] = 1
             self.up_down_pressed = 0
             if self.enter_pressed:
                 if self.user_focus[1] == 0:
                     self.SwitchToScene(ClassicGameScene(self.level, False))
                 if self.user_focus[1] == 1:
                     self.SwitchToScene(ClassicGameScene(self.level, True))
-                if self.user_focus[1] == 2:
-                    self.SwitchToScene(CircleGameScene(self.level))
         if self.esc_pressed:
             self.SwitchToScene(TitleScene())
 
@@ -249,14 +254,11 @@ class LevelSelectScene(SceneBase):
         down_buttom.draw(screen)
 
         # mode selection
-        modes = ['Classic', 'Classic (advanced)', 'Circle']
+        modes = ['Classic', 'Advanced']
         base_pos_y, delta_y = 330, 65
         for i in range(len(modes)):
             mode_text = PureText(modes[i], 50, 'white', center=(570, base_pos_y + i * delta_y))
             mode_text.draw(screen)
-        # TODO: finish the circle mode
-        invalid_text = PureText('(currently invalid)', 30, 'gray40', center=(570, 460))
-        invalid_text.draw(screen)
 
         # focus
         if self.user_focus[0] == 0:
@@ -296,13 +298,10 @@ class GameBridgeScene(SceneBase):
 
 
 class ClassicGameScene(SceneBase):
-    photons = []
     photons_per_line = 7 # should be odd number
-    electrons = []
     photon_distance = 80
     velocity_of_photon = vec2(0, 2)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
-    time_remain = 31
 
     def new_photons(self):
         # parameters: center_pos, vel
@@ -313,13 +312,19 @@ class ClassicGameScene(SceneBase):
         self.next = self
         self.level = level # 1:easy, 7:hard
         self.charge_enabled = charge_enabled
+        self.photons = []
+        self.electrons = []
+        self.time_remain = 31
         self.photons.append(self.new_photons())
-        self.score = Score(70, 'pink', topright=(800 - 20, 20))
+        self.score = Score(60, 'pink', topright=(800 - 15, 15))
         self.medal = Medal()
         self.medal_status = MedalStatusBar((800 - 15, 280))
         self.ground = [Ground(10), Ground(790)]
-        self.countdown = CountDown(self.time_remain, 70, 'pink', topleft=(20, 20))
+        self.countdown = CountDown(self.time_remain, 60, 'pink', topleft=(15, 15))
         self.countdown.start_tick()
+        line_of_horizon2 = 600 - 30
+        self.horizon_rect2 = pg.Rect(0, line_of_horizon2, 800, 600 - line_of_horizon2)
+
 
     def generate_electron(self, pos, vel):
         # pos -> pg.Rect()
@@ -359,9 +364,9 @@ class ClassicGameScene(SceneBase):
 
         # photon collision handle
         for photon in self.photons[0]:
-            if photon.inside(self.horizon_rect):
+            if photon.inside(self.horizon_rect2):
                 self.photons[0].remove(photon)
-            elif photon.collide_with(self.medal.pos_rect):
+            elif photon.collide_with(self.medal.collision_rect):
                 increment = 0
                 if (not self.charge_enabled) and photon.color_n >= self.level:
                     increment = photon.color_n
@@ -389,6 +394,9 @@ class ClassicGameScene(SceneBase):
     def Render(self, screen):
         screen.fill(pg.Color('black'))
 
+        # horizon
+        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
+
         # photons & electrons
         for sub_photons in self.photons:
             for photon in sub_photons:
@@ -396,8 +404,8 @@ class ClassicGameScene(SceneBase):
         for electron in self.electrons:
             electron.draw(screen)
 
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
+        # horizon 2
+        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect2)
 
         # ground
         self.ground[0].draw(screen)
@@ -418,25 +426,6 @@ class ClassicGameScene(SceneBase):
 
         # time's up!
         if self.countdown.time_remain == 0: self.SwitchToScene(EndBridgeScene(self.score.score_number, screen))
-
-
-
-
-
-
-class CircleGameScene(SceneBase):
-    def __init__(self, level):
-        self.next = self
-        self.level = level
-
-    def ProcessInput(self, events, pressed_keys):
-        pass
-
-    def Update(self):
-        pass
-
-    def Render(self, screen):
-        screen.fill(pg.Color('pink'))
 
 
 
@@ -552,5 +541,5 @@ if __name__ == '__main__':
     #startWithScene(TitleScene())
     #startWithScene(HelpScene())
     #startWithScene(LevelSelectScene())
-    #startWithScene(ClassicGameScene(1, True))
-    startWithScene(EndScene(150))
+    startWithScene(ClassicGameScene(1, True))
+    #startWithScene(EndScene(150))
