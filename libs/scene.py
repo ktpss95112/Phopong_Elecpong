@@ -5,10 +5,12 @@ import os.path
 if __name__ == '__main__':
     import element
     from OtherObjects import *
+    from GlobalParameters import *
     data_path = os.path.join('..', 'data')
 else:
     import libs.element as element
     from libs.OtherObjects import *
+    from libs.GlobalParameters import *
     data_path = 'data'
 
 
@@ -318,9 +320,9 @@ class ClassicGameScene(SceneBase):
         self.photons.append(self.new_photons())
         self.score = Score(60, 'pink', topright=(800 - 15, 15))
         self.medal = Medal()
-        self.medal_status = MedalStatusBar((800 - 15, 280))
+        self.medal_status = MedalStatusBar((800 - 35, 300))
         self.ground = Ground()
-        self.countdown = CountDown(self.time_remain, 60, 'pink', topleft=(15, 15))
+        self.countdown = CountDown(self.time_remain, 'pink', topleft=(15, 15))
         self.countdown.start_tick()
         line_of_horizon2 = 600 - 30
         self.horizon_rect2 = pg.Rect(0, line_of_horizon2, 800, 600 - line_of_horizon2)
@@ -371,7 +373,7 @@ class ClassicGameScene(SceneBase):
                 if (not self.charge_enabled) and photon.color_n >= self.level:
                     increment = photon.color_n
                 elif self.charge_enabled and photon.color_n >= self.level:
-                    increment = photon.color_n * (1 - self.medal_status.charge / 100)
+                    increment = photon.color_n * (1 - self.medal_status.charge / 200)
 
                 if increment != 0:
                     self.medal.set_highlight()
@@ -444,7 +446,7 @@ class EndBridgeScene(SceneBase):
         self.score = score
         self.freezed_screen = screen.copy()
         # parameters excluding time_remain is arbitrary
-        self.countdown = CountDown(self.time_duration, 0, 'black', center=(0, 0))
+        self.countdown = CountDown(self.time_duration, 'black', center=(0, 0))
         self.countdown.start_tick()
         self.times_up_text = FlashingText('TIME\'S UP!!!', 120, 'violetred', center=(400, 280))
 
