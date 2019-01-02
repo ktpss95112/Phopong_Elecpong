@@ -117,6 +117,7 @@ class Medal():
         self.pos_rect = self.images[0].get_rect(center=(400, 600 - 60))
         self.collision_rect = pg.Rect(self.pos_rect)
         self.collision_rect.height = 9
+        self.to_draw = 0
 
     count_down = 0
     def set_highlight(self):

@@ -6,12 +6,12 @@ if __name__ == '__main__':
     import element
     from OtherObjects import *
     from GlobalParameters import *
-    data_path = os.path.join('..', 'data')
+    from utility import *
 else:
     import libs.element as element
     from libs.OtherObjects import *
     from libs.GlobalParameters import *
-    data_path = 'data'
+    from libs.utility import *
 
 
 def startWithScene(s):
@@ -83,6 +83,7 @@ class SceneBase:
 
 
 class TitleScene(SceneBase):
+    # TODO: generate some photons on background
     user_focus = 0 # 0: start, 1: help, 2: exit
     enter_pressed = False
 
@@ -194,6 +195,7 @@ class HelpScene(SceneBase):
 
 
 class LevelSelectScene(SceneBase):
+    # TODO: generate some photons on background
     # [0]: 0->level, 1->mode
     # [1]: 0->classic, 1->advanced
     user_focus = [0, 0]
@@ -241,25 +243,25 @@ class LevelSelectScene(SceneBase):
         screen.fill(pg.Color('black'))
 
         # title
-        title_level_text = PureText('Level', 150, 'white', center=(200, 150))
-        title_mode_text = PureText('Mode', 150, 'white', center=(570, 150))
+        title_level_text = PureText('Level', 150, 'white', center=(230 - 15, 150))
+        title_mode_text = PureText('Mode', 150, 'white', center=(600 - 15, 150))
         title_level_text.draw(screen)
         title_mode_text.draw(screen)
 
         # level selection
-        level_selection_text = PureText(f'{self.level}', 80, 'white', center=(200, 380))
+        level_selection_text = PureText(f'{self.level}', 80, 'white', center=(230 - 15, 380))
         level_selection_text.draw(screen)
         # TODO: add little triangle above and below the rect
-        up_buttom = PureText('up buttom here', 30, 'gray40', center=(200, 300))
+        up_buttom = PureText('up buttom here', 30, 'gray40', center=(230 - 15, 300))
         up_buttom.draw(screen)
-        down_buttom = PureText('down buttom here', 30, 'gray40', center=(200, 460))
+        down_buttom = PureText('down buttom here', 30, 'gray40', center=(230 - 15, 460))
         down_buttom.draw(screen)
 
         # mode selection
         modes = ['Classic', 'Advanced']
         base_pos_y, delta_y = 330, 65
         for i in range(len(modes)):
-            mode_text = PureText(modes[i], 50, 'white', center=(570, base_pos_y + i * delta_y))
+            mode_text = PureText(modes[i], 50, 'white', center=(600 - 15, base_pos_y + i * delta_y))
             mode_text.draw(screen)
 
         # focus
@@ -316,13 +318,12 @@ class ClassicGameScene(SceneBase):
         self.charge_enabled = charge_enabled
         self.photons = []
         self.electrons = []
-        self.time_remain = 31
         self.photons.append(self.new_photons())
-        self.score = Score(60, 'pink', topright=(800 - 15, 15))
+        self.score = Score(score_font_size, 'pink', topright=(800 - 15, 15))
         self.medal = Medal()
         self.medal_status = MedalStatusBar((800 - 35, 300))
         self.ground = Ground()
-        self.countdown = CountDown(self.time_remain, 'pink', topleft=(15, 15))
+        self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
         self.countdown.start_tick()
         line_of_horizon2 = 600 - 30
         self.horizon_rect2 = pg.Rect(0, line_of_horizon2, 800, 600 - line_of_horizon2)
@@ -520,7 +521,7 @@ class EndScene(SceneBase):
         options = ['Again', 'Homepage', 'Exit']
         base_pos_y, delta_y = 300, 55
         for i in range(len(options)):
-            option_text = PureText(options[i], 50, 'white', midleft=(550, base_pos_y + i * delta_y))
+            option_text = PureText(options[i], options_font_size, 'white', midleft=(550, base_pos_y + i * delta_y))
             option_text.draw(screen)
 
         # focus buttom
@@ -542,5 +543,5 @@ if __name__ == '__main__':
     #startWithScene(TitleScene())
     #startWithScene(HelpScene())
     #startWithScene(LevelSelectScene())
-    startWithScene(ClassicGameScene(1, True))
-    #startWithScene(EndScene(150))
+    #startWithScene(ClassicGameScene(1, True))
+    startWithScene(EndScene(150))
