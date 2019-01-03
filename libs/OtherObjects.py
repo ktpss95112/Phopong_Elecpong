@@ -1,7 +1,21 @@
+"""
+    After modifying this module, please run generate_background_image.py to
+    generate new background images.
+"""
 import pygame as pg
 from pygame.math import Vector2 as vec2
 
-__all__ = ['PureText', 'FlashingText', 'Score', 'CountDown', 'Medal', 'MedalStatusBar', 'Ground']
+__all__ = [
+    'PureText',
+    'FlashingText',
+    'FlashingImage',
+    'Score',
+    'CountDown',
+    'Medal',
+    'MedalStatusBar',
+    'Ground',
+    'EndAnimation',
+]
 
 import os.path
 if 'libs' in __name__:
@@ -54,6 +68,30 @@ class FlashingText(PureText):
 
 
 
+class FlashingImage():
+    def __init__(self, image, **pos):
+        """
+        pos: refer to the attributes of pg.Rect
+        """
+        self.image = image
+        self.pos_rect = self.image.get_rect(**pos)
+        self.time_count = 0
+
+    def update(self):
+        self.time_count = (self.time_count + 1) % flashing_period
+
+    def draw(self, screen):
+        if self.time_count < flashing_period // 2:
+            screen.blit(self.image, self.pos_rect)
+
+
+
+
+
+
+
+
+
 class Score():
     score_number = 0
 
@@ -86,7 +124,7 @@ class CountDown():
         self.color = color
         self.time_remain = time_remain
         self.font = pg.font.Font(default_font, countdown_font_size)
-        self.text_surface = self.font.render('0:00', True, pg.Color(self.color))
+        self.text_surface = self.font.render(f'{self.time_remain // 60}:{self.time_remain % 60:02}', True, pg.Color(self.color))
         self.pos_rect = self.text_surface.get_rect(**pos)
 
     def start_tick(self):
@@ -208,4 +246,29 @@ class Ground():
         screen.blit(self.ground_r, self.pos_rect_r)
 
 
+
+
+
+
+
+
+class EndAnimation():
+    frames = [
+        scaled_surface(pg.image.load(os.path.join(data_path, 'EndSceneAnimation', f'{i}.png')), 0.5)
+        for i in range(4)
+    ]
+
+    def __init__(self, **pos):
+        self.clock = 0
+        self.current_frame = 0
+        self.pos_rect = self.frames[0].get_rect(**pos)
+
+    deltat = 10
+    def update(self):
+        self.clock += 1
+        if self.clock % self.deltat == 0:
+            self.current_frame = (self.current_frame + 1) % len(self.frames)
+
+    def draw(self, screen):
+        screen.blit(self.frames[self.current_frame], self.pos_rect)
 

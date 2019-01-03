@@ -54,9 +54,6 @@ def startWithScene(s):
 
 
 class SceneBase:
-    line_of_horizon = 600 - 40
-    horizon_rect = pg.Rect(0, line_of_horizon, 800, 600 - line_of_horizon)
-
     def __init__(self):
         self.next = self
 
@@ -84,8 +81,10 @@ class SceneBase:
 
 class TitleScene(SceneBase):
     # TODO: generate some photons on background
+    # TODO: highscore (create a file to store the information)
     user_focus = 0 # 0: start, 1: help, 2: exit
     enter_pressed = False
+    background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'title_scene.png'))
 
     def ProcessInput(self, events, pressed_keys):
         for event in events:
@@ -108,33 +107,13 @@ class TitleScene(SceneBase):
 
     def Render(self, screen):
         screen.fill(pg.Color('black'))
-        # TODO: background
-
-        # title
-        for i in (1, 2):
-            image = pg.image.load(os.path.join(data_path, 'Title', f'title_{i}.png'))
-            scale = 0.8
-            image = pg.transform.smoothscale(image, (int(scale * image.get_width()), int(scale * image.get_height())))
-            screen.blit(image, image.get_rect(center=(400, i * 100)))
-
-
-        # options
-        base_pos_y, delta_y = 330, 55
-        start_text = PureText('Start', 55, 'white', center=(400, base_pos_y))
-        help_text = PureText('Help', 55, 'white', center=(400, base_pos_y + delta_y))
-        exit_text = PureText('Exit', 55, 'white', center=(400, base_pos_y + 2 * delta_y))
-        start_text.draw(screen)
-        help_text.draw(screen)
-        exit_text.draw(screen)
+        screen.blit(self.background_image, self.background_image.get_rect())
 
         # focus buttom
+        base_pos_y, delta_y = 330, 55
         focus_rect = pg.Rect(0, 0, 15, 15)
         focus_rect.center = (330, base_pos_y + self.user_focus * delta_y)
         pg.draw.rect(screen, pg.Color('red'), focus_rect)
-
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
-
 
 
 
@@ -146,9 +125,18 @@ class TitleScene(SceneBase):
 
 
 class HelpScene(SceneBase):
+    background_image1 = pg.image.load(os.path.join(data_path, 'backgrounds', 'help_scene1.png'))
+    background_image2 = pg.image.load(os.path.join(data_path, 'backgrounds', 'help_scene2.png'))
+    enter_buttom = scaled_surface(pg.image.load(os.path.join(data_path, 'keys', 'enter.png')), 0.3)
+    space_buttom = scaled_surface(pg.image.load(os.path.join(data_path, 'keys', 'space.png')), 0.3)
+
     def __init__(self):
         self.next = self
-        self.flashing_text = FlashingText('Press "Enter" or "Space" To Go Back ...', 40, 'gray77', center=(400, 480))
+        self.current_image = 1
+
+        # image1
+        self.flashing_enter_buttom = FlashingImage(self.enter_buttom, center=(700, 500))
+        self.flashing_items = [self.flashing_enter_buttom]
 
     enter_pressed = False
     def ProcessInput(self, events, pressed_keys):
@@ -158,32 +146,32 @@ class HelpScene(SceneBase):
                     self.enter_pressed = True
 
     def Update(self):
-        if self.enter_pressed: self.SwitchToScene(TitleScene())
-        self.flashing_text.update()
+        if self.enter_pressed:
+            if self.current_image == 1:
+                # image2
+                # press enter space to continue
+                self.flashing_text = FlashingText('Press     or     to Continue ...', 40, 'gray90', center=(400, 515))
+
+                # enter, space
+                self.flashing_enter_buttom = FlashingImage(self.enter_buttom, center=(265, 515))
+                self.flashing_space_buttom = FlashingImage(self.space_buttom, center=(375, 515))
+                self.current_image = 2
+                self.flashing_items = [self.flashing_text, self.flashing_enter_buttom, self.flashing_space_buttom]
+                self.enter_pressed = False
+            else:
+                self.SwitchToScene(TitleScene())
+
+        for item in self.flashing_items:
+            item.update()
 
     def Render(self, screen):
-        screen.fill(pg.Color('black'))
+        if self.current_image == 1:
+            screen.blit(self.background_image1, self.background_image1.get_rect())
+        else:
+            screen.blit(self.background_image2, self.background_image2.get_rect())
 
-        # title
-        title_text = PureText('Help Title', 150, 'white', center=(400, 150))
-        title_text.draw(screen)
-
-        # content
-        base_pos_y, delta_y = 260, 30
-        for i in range(5):
-            content_text = PureText('contents here contents here', 35, 'gray77', center=(250, base_pos_y + i * delta_y))
-            content_text.draw(screen)
-
-        # keyboard image
-        image = PureText('image', 80, 'gray77', center=(600, 330))
-        image.draw(screen)
-
-        # 'press enter space to continue'
-        # TODO: replace text 'enter' with image, same as 'space'
-        self.flashing_text.draw(screen)
-
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
+        for item in self.flashing_items:
+            item.draw(screen)
 
 
 
@@ -196,13 +184,17 @@ class HelpScene(SceneBase):
 
 class LevelSelectScene(SceneBase):
     # TODO: generate some photons on background
-    # [0]: 0->level, 1->mode
-    # [1]: 0->classic, 1->advanced
-    user_focus = [0, 0]
     level = 1
     enter_pressed = False
     esc_pressed = False
     up_down_pressed = 0 # -1: down, 0: not, 1: up
+    background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'level_scene.png'))
+
+    def __init__(self):
+        self.next = self
+        # [0]: 0->level, 1->mode
+        # [1]: 0->classic, 1->advanced
+        self.user_focus = [0, 0]
 
     def ProcessInput(self, events, pressed_keys):
         for event in events:
@@ -233,47 +225,27 @@ class LevelSelectScene(SceneBase):
             self.up_down_pressed = 0
             if self.enter_pressed:
                 if self.user_focus[1] == 0:
-                    self.SwitchToScene(ClassicGameScene(self.level, False))
+                    self.SwitchToScene(GameBridgeScene(self.level, False))
                 if self.user_focus[1] == 1:
-                    self.SwitchToScene(ClassicGameScene(self.level, True))
+                    self.SwitchToScene(GameBridgeScene(self.level, True))
         if self.esc_pressed:
             self.SwitchToScene(TitleScene())
 
     def Render(self, screen):
-        screen.fill(pg.Color('black'))
-
-        # title
-        title_level_text = PureText('Level', 150, 'white', center=(230 - 15, 150))
-        title_mode_text = PureText('Mode', 150, 'white', center=(600 - 15, 150))
-        title_level_text.draw(screen)
-        title_mode_text.draw(screen)
+        screen.blit(self.background_image, self.background_image.get_rect())
 
         # level selection
         level_selection_text = PureText(f'{self.level}', 80, 'white', center=(230 - 15, 380))
         level_selection_text.draw(screen)
-        # TODO: add little triangle above and below the rect
-        up_buttom = PureText('up buttom here', 30, 'gray40', center=(230 - 15, 300))
-        up_buttom.draw(screen)
-        down_buttom = PureText('down buttom here', 30, 'gray40', center=(230 - 15, 460))
-        down_buttom.draw(screen)
-
-        # mode selection
-        modes = ['Classic', 'Advanced']
-        base_pos_y, delta_y = 330, 65
-        for i in range(len(modes)):
-            mode_text = PureText(modes[i], 50, 'white', center=(600 - 15, base_pos_y + i * delta_y))
-            mode_text.draw(screen)
 
         # focus
+        base_pos_y, delta_y = 330, 72
         if self.user_focus[0] == 0:
-            pg.draw.rect(screen, pg.Color('red'), pg.Rect(level_selection_text.pos_rect).inflate(35, 35).move(0, -3), 5)
+            pg.draw.rect(screen, pg.Color('red'), pg.Rect(level_selection_text.pos_rect).inflate(35, 10), 5)
         if self.user_focus[0] == 1:
-            mode_focus_rect = pg.Rect(0, 0, 340, 50)
-            mode_focus_rect.center = (570, base_pos_y + delta_y * self.user_focus[1])
+            mode_focus_rect = pg.Rect(0, 0, 220, 50)
+            mode_focus_rect.center = (583, base_pos_y + delta_y * self.user_focus[1])
             pg.draw.rect(screen, pg.Color('red'), mode_focus_rect, 5)
-
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
 
         # TODO:
         # image to give hint of press enter
@@ -289,7 +261,41 @@ class LevelSelectScene(SceneBase):
 
 
 class GameBridgeScene(SceneBase):
-    pass
+    background_image1 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(classic).png'))
+    background_image2 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(advanced).png'))
+
+    def __init__(self, level, charge_enabled):
+        self.next = self
+        self.level = level
+        self.charge_enabled = charge_enabled
+        if self.charge_enabled: self.background_image = self.background_image2
+        else:                   self.background_image = self.background_image1
+        self.score = Score(score_font_size, 'pink', topright=(800 - 15, 15))
+        self.medal = Medal()
+        self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
+
+        self.clock = 0
+        self.ready_text = PureText('READY?', title_font_size, 'lightblue', center=(400, 270))
+        self.go_text = PureText('GO!', title_font_size, 'lightblue', center=(400, 270))
+
+    def ProcessInput(self, events, pressed_keys):
+        pass
+
+    def Update(self):
+        self.clock += 1
+        if self.clock > 100: self.SwitchToScene(GameScene(self.level, self.charge_enabled))
+
+    def Render(self, screen):
+        screen.blit(self.background_image, self.background_image.get_rect())
+
+        self.medal.draw(screen)
+        self.score.draw(screen)
+        self.countdown.draw(screen)
+
+        if self.clock in range(50):
+            self.ready_text.draw(screen)
+        else:
+            self.go_text.draw(screen)
 
 
 
@@ -301,11 +307,16 @@ class GameBridgeScene(SceneBase):
 
 
 
-class ClassicGameScene(SceneBase):
+
+class GameScene(SceneBase):
+    # TODO: press <esc> to stop the game
     photons_per_line = 7 # should be odd number
     photon_distance = 80
     velocity_of_photon = vec2(0, 2)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
+    background_image1 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(classic).png'))
+    background_image2 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(advanced).png'))
+
 
     def new_photons(self):
         # parameters: center_pos, vel
@@ -325,8 +336,9 @@ class ClassicGameScene(SceneBase):
         self.ground = Ground()
         self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
         self.countdown.start_tick()
-        line_of_horizon2 = 600 - 30
         self.horizon_rect2 = pg.Rect(0, line_of_horizon2, 800, 600 - line_of_horizon2)
+        if self.charge_enabled: self.background_image = self.background_image2
+        else:                   self.background_image = self.background_image1
 
 
     def generate_electron(self, pos, vel):
@@ -378,8 +390,8 @@ class ClassicGameScene(SceneBase):
 
                 if increment != 0:
                     self.medal.set_highlight()
-                    self.score.update(int(5 * increment))
-                    self.medal_status.update(photon.color_n)
+                    self.score.update(int(6 * 5 * increment))
+                    self.medal_status.update(3 * photon.color_n)
                     self.generate_electron(photon.pos.center, vec2(0, -increment))
 
                 self.photons[0].remove(photon)
@@ -390,15 +402,13 @@ class ClassicGameScene(SceneBase):
         # TODO: change color when charging
         if self.medal.pos_rect.collidelist([ self.ground.pos_rect_l, self.ground.pos_rect_r ]) != -1:
             self.medal_status.update(-5)
+            self.medal.set_ground()
 
         # update timer
         self.countdown.update()
 
     def Render(self, screen):
-        screen.fill(pg.Color('black'))
-
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
+        screen.blit(self.background_image, self.background_image.get_rect())
 
         # photons & electrons
         for sub_photons in self.photons:
@@ -410,8 +420,13 @@ class ClassicGameScene(SceneBase):
         # horizon 2
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect2)
 
+        # medal status
+        if self.charge_enabled:
+            self.medal_status.draw(screen)
+
         # ground
-        self.ground.draw(screen)
+        if self.charge_enabled:
+            self.ground.draw(screen)
 
         # medal
         self.medal.draw(screen)
@@ -421,10 +436,6 @@ class ClassicGameScene(SceneBase):
 
         # score
         self.score.draw(screen)
-
-        # medal status
-        if self.charge_enabled:
-            self.medal_status.draw(screen)
 
         # time's up!
         if self.countdown.time_remain == 0: self.SwitchToScene(EndBridgeScene(self.score.score_number, screen))
@@ -437,8 +448,6 @@ class ClassicGameScene(SceneBase):
 
 
 class EndBridgeScene(SceneBase):
-    time_duration = 4.7
-
     def __init__(self, score, screen):
         """
         score: int
@@ -447,7 +456,7 @@ class EndBridgeScene(SceneBase):
         self.score = score
         self.freezed_screen = screen.copy()
         # parameters excluding time_remain is arbitrary
-        self.countdown = CountDown(self.time_duration, 'black', center=(0, 0))
+        self.countdown = CountDown(end_bridge_time, 'black', center=(0, 0))
         self.countdown.start_tick()
         self.times_up_text = FlashingText('TIME\'S UP!!!', 120, 'violetred', center=(400, 280))
 
@@ -476,6 +485,7 @@ class EndBridgeScene(SceneBase):
 class EndScene(SceneBase):
     user_focus = 0
     enter_pressed = False
+    background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'end_scene.png'))
 
     def __init__(self, score):
         """
@@ -483,6 +493,7 @@ class EndScene(SceneBase):
         """
         self.next = self
         self.score = score
+        self.animation = EndAnimation(center=(230, 400))
 
     def ProcessInput(self, events, pressed_keys):
         for event in events:
@@ -503,9 +514,11 @@ class EndScene(SceneBase):
             if self.user_focus == 2: self.Terminate()
             self.enter_pressed = False
 
+        self.animation.update()
+
 
     def Render(self, screen):
-        screen.fill(pg.Color('black'))
+        screen.blit(self.background_image, self.background_image.get_rect())
 
         # score
         score_text = PureText('Score:', 80, 'pink', topright=(250+40, 60+20))
@@ -514,23 +527,14 @@ class EndScene(SceneBase):
         score_number.draw(screen)
 
         # animation
-        animation = PureText('animation here', 40, 'gray40', center=(230, 400))
-        animation.draw(screen)
-
-        # options
-        options = ['Again', 'Homepage', 'Exit']
-        base_pos_y, delta_y = 300, 55
-        for i in range(len(options)):
-            option_text = PureText(options[i], options_font_size, 'white', midleft=(550, base_pos_y + i * delta_y))
-            option_text.draw(screen)
+        self.animation.draw(screen)
 
         # focus buttom
+        base_pos_y, delta_y = 300, 55
         focus_rect = pg.Rect(0, 0, 15, 15)
         focus_rect.center = (530, base_pos_y + self.user_focus * delta_y)
         pg.draw.rect(screen, pg.Color('red'), focus_rect)
 
-        # horizon
-        pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect)
 
 
 
@@ -543,5 +547,5 @@ if __name__ == '__main__':
     #startWithScene(TitleScene())
     #startWithScene(HelpScene())
     #startWithScene(LevelSelectScene())
-    #startWithScene(ClassicGameScene(1, True))
+    #startWithScene(GameScene(1, True))
     startWithScene(EndScene(150))

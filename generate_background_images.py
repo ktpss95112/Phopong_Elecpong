@@ -108,9 +108,9 @@ to ground when the status hasn't reached maximum.
 
     # left, right
     left_buttom = scaled_surface(pg.image.load(os.path.join(data_path, 'keys', 'left.png')), 0.35)
-    screen1.blit(left_buttom, left_buttom.get_rect(center=(560, 185)))
+    screen1.blit(left_buttom, left_buttom.get_rect(center=(559, 184)))
     right_buttom = scaled_surface(pg.image.load(os.path.join(data_path, 'keys', 'right.png')), 0.35)
-    screen1.blit(right_buttom, right_buttom.get_rect(center=(660, 185)))
+    screen1.blit(right_buttom, right_buttom.get_rect(center=(658, 184)))
 
     if save:
         pg.image.save(screen1, os.path.join(data_path, 'backgrounds', 'help_scene1.png'))
@@ -120,6 +120,7 @@ to ground when the status hasn't reached maximum.
     for i in range(len(lines2)):
         line_text = PureText(lines2[i], help_font_size, 'gray90', topleft=(40, base_pos_y + i * delta_y))
         line_text.draw(screen2)
+
     # 'press enter space to continue'
     #flashing_text = PureText('Press     or     to Continue ...', 40, 'gray90', center=(400, 515))
     #flashing_text.draw(screen2)
@@ -176,15 +177,6 @@ def level_scene(save=False):
 
 def game_bridge_scene(save=False):
     screen = scene_base()
-
-    score = Score(score_font_size, 'pink', topright=(800 - 15, 15))
-    score.draw(screen)
-
-    medal = Medal()
-    medal.draw(screen)
-
-    countdown = CountDown(game_time, 'pink', topleft=(15, 15))
-    countdown.draw(screen)
 
     if save:
         pg.image.save(screen, os.path.join(data_path, 'backgrounds', 'game_scene(classic).png'))
