@@ -296,18 +296,18 @@ class GameBridgeScene(SceneBase):
                 FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.medals[0].pos_rect.midright),
             ]
         else:
-            self.scores = [ Score(score_font_size, 'deepskyblue1', topright=(800 - 15, 15)),
-                            Score(score_font_size, 'gold1', topleft=(15, 15)) ]
-            self.medals = [ Medal(1, center=(400 - 120, 600 - 60)),
-                            Medal(2, center=(400 + 120, 600 - 60)) ]
-            self.medal_statuss = [ MedalStatusBar(topright=(800 - 15, 15)),
-                                   MedalStatusBar(topleft=(15, 15)) ]
+            self.scores = [ Score(score_font_size, 'gold1', topright=(800 - 15, 15)),
+                            Score(score_font_size, 'deepskyblue1', topleft=(15, 15)) ]
+            self.medals = [ Medal(1, center=(400 + 120, 600 - 60)),
+                            Medal(2, center=(400 - 120, 600 - 60)) ]
+            self.medal_statuss = [ MedalStatusBar((800 - 35, 300)),
+                                   MedalStatusBar((35, 300)) ]
             self.countdown = CountDown(game_time, 'pink', midtop=(400, 25))
             self.lr_buttoms = [
-                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.medals[1].pos_rect.midleft),
-                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.medals[1].pos_rect.midright),
-                FlashingImage(self.A_buttom, flashing_period=0.5, midright=self.medals[0].pos_rect.midleft),
-                FlashingImage(self.D_buttom, flashing_period=0.5, midleft=self.medals[0].pos_rect.midright),
+                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.medals[0].pos_rect.midleft),
+                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.medals[0].pos_rect.midright),
+                FlashingImage(self.A_buttom, flashing_period=0.5, midright=self.medals[1].pos_rect.midleft),
+                FlashingImage(self.D_buttom, flashing_period=0.5, midleft=self.medals[1].pos_rect.midright),
             ]
 
         self.time_end = pg.time.get_ticks() + game_bridge_time
@@ -385,16 +385,17 @@ class GameScene(SceneBase):
         else:                   self.background_image = self.background_image1
 
         # depend on num_of_player
+        # player[0] : right, player[1] : left
         if num_of_player == 1:
             self.scores = [ Score(score_font_size, 'pink', topright=(800 - 15, 15)) ]
             self.medals = [ Medal(0, center=(400, 600 - 60)) ]
             self.medal_statuss = [ MedalStatusBar((800 - 35, 300)) ]
             self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
         else:
-            self.scores = [ Score(score_font_size, 'gold1', topleft=(15, 15)),
-                            Score(score_font_size, 'deepskyblue1', topright=(800 - 15, 15)) ]
-            self.medals = [ Medal(2, center=(400 + 120, 600 - 60)),
-                            Medal(1, center=(400 - 120, 600 - 60)) ]
+            self.scores = [ Score(score_font_size, 'gold1', topright=(800 - 15, 15)),
+                            Score(score_font_size, 'deepskyblue1', topleft=(15, 15)) ]
+            self.medals = [ Medal(1, center=(400 + 120, 600 - 60)),
+                            Medal(2, center=(400 - 120, 600 - 60)) ]
             self.medal_statuss = [ MedalStatusBar((800 - 35, 300)),
                                    MedalStatusBar((35, 300)) ]
             self.countdown = CountDown(game_time, 'burlywood1', midtop=(400, 25))

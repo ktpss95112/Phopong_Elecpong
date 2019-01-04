@@ -214,11 +214,9 @@ class Medal():
 class MedalStatusBar():
     color = ['green', 'yellow', 'darkorange', 'red2']
 
-    def __init__(self, center=None, topleft=None, topright=None):
+    def __init__(self, center):
         self.border = pg.Rect(0, 0, 20, 200)
-        if center: self.border.center = center
-        if topleft: self.border.topleft = topleft
-        if topright: self.border.topright = topright
+        self.border.center = center
         self.charge_bar = []
         self.charge = 0 # electric charge: [0, 200]
         height = [60, 120, 160, 200]
