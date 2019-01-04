@@ -62,11 +62,7 @@ def title_scene(save=False):
 
 
 def help_scene(save=False):
-    """
-    screen1: TODO: magnify down_buttom to give hint
-    screen2: TODO: add flashing text
-    """
-    lines1 = """
+    lines1 = '''
 tldr: Catch as many purple photons as you can!
 
    It is a game simulating "photoelectric effect".
@@ -81,8 +77,8 @@ higher frequency can emit an electron with higher
 kinetic energy. That is, the electron will move
 faster, and your score is proportional to its
 velocity.
-""".strip('\n').split('\n')
-    lines2 = """
+'''.strip('\n').split('\n')
+    lines2 = '''
    However, different medal has different "work
 function", which is implemented as "Level" in this
 game. In short, electron won't be emitted if the
@@ -97,7 +93,7 @@ increases as the electron emitted. If charge reach
 the maximum, you have to connect to "ground" on
 each side of the horizon. Of course you can connect
 to ground when the status hasn't reached maximum.
-""".strip('\n').split('\n')
+'''.strip('\n').split('\n')
 
     screen1 = scene_base()
 
@@ -138,6 +134,7 @@ to ground when the status hasn't reached maximum.
 
 
 
+
 def level_scene(save=False):
     screen = scene_base()
 
@@ -157,15 +154,15 @@ def level_scene(save=False):
     screen.blit(right_buttom, right_buttom.get_rect(center=(330 - 15, 380)))
 
     # mode selection
-    modes = ['Classic', 'Advanced']
-    base_pos_y, delta_y = 330, 70
+    modes = ['Classic', 'Advanced', 'Classic (2 players)', 'Advanced(2 players)']
+    base_pos_y, delta_y = 320, 40
     for i in range(len(modes)):
-        mode_text = PureText(modes[i], options_font_size, 'white', center=(600 - 15, base_pos_y + i * delta_y))
+        mode_text = PureText(modes[i], mode_font_size, 'white', center=(600 - 15, base_pos_y + i * delta_y))
         mode_text.draw(screen)
 
     # enter
     enter_buttom = scaled_surface(pg.image.load(os.path.join(data_path, 'keys', 'enter.png')), 0.25)
-    screen.blit(enter_buttom, enter_buttom.get_rect(center=(730 - 15, 370)))
+    screen.blit(enter_buttom, enter_buttom.get_rect(center=(730, 500)))
 
     if save:
         pg.image.save(screen, os.path.join(data_path, 'backgrounds', 'level_scene.png'))
@@ -180,9 +177,6 @@ def game_bridge_scene(save=False):
 
     if save:
         pg.image.save(screen, os.path.join(data_path, 'backgrounds', 'game_scene(classic).png'))
-
-    medal_status = MedalStatusBar((800 - 35, 300))
-    medal_status.draw(screen)
 
     ground = Ground()
     ground.draw(screen)
@@ -199,7 +193,7 @@ def end_scene(save=False):
     screen = scene_base()
 
     options = ['Again', 'Homepage', 'Exit']
-    base_pos_y, delta_y = 300, 55
+    base_pos_y, delta_y = 260, 55
     for i in range(len(options)):
         option_text = PureText(options[i], options_font_size, 'white', midleft=(550, base_pos_y + i * delta_y))
         option_text.draw(screen)
@@ -211,8 +205,36 @@ def end_scene(save=False):
 
 
 
+
+def motto(save=False):
+    base_pos_y, delta_y = 0, motto_font_size
+
+    index = 0
+    for m in mottos:
+        texts = []
+        max_width = 0
+        cnt = 0
+        delta_y = motto_font_size - 3
+        for line in m.split('\n'):
+            t = PureText(line, motto_font_size, 'gray61', topleft=(0, cnt * delta_y))
+            max_width = max(max_width, t.pos_rect.width)
+            texts.append(t)
+            cnt += 1
+        screen = pg.Surface((max_width, delta_y * len(texts)))
+        for t in texts:
+            t.draw(screen)
+
+        if save:
+            pg.image.save(screen, os.path.join(data_path, 'backgrounds', f'motto{index}.png'))
+
+        index += 1
+
+
+
+
 title_scene(save=True)
 help_scene(save=True)
 level_scene(save=True)
 game_bridge_scene(save=True)
 end_scene(save=True)
+motto(save=True)

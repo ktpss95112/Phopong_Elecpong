@@ -1,12 +1,13 @@
-"""
+'''
     After modifying this module, please run generate_background_image.py to
     generate new background images.
-"""
+'''
 import pygame as pg
 from pygame.math import Vector2 as vec2
 
 __all__ = [
     'PureText',
+    'Timer',
     'FlashingText',
     'FlashingImage',
     'Score',
@@ -29,9 +30,9 @@ else:
 
 class PureText():
     def __init__(self, text, size, color, **pos):
-        """
+        '''
         pos: refer to the attributes of pg.Rect
-        """
+        '''
         self.font = pg.font.Font(default_font, size)
         self.text_surface = self.font.render(text, True, pg.Color(color))
         self.pos_rect = self.text_surface.get_rect(**pos)
@@ -46,19 +47,39 @@ class PureText():
 
 
 
+class Timer():
+    def __init__(self):
+        self.prev_time = pg.time.get_ticks()
+
+    def dt(self):
+        current_time = pg.time.get_ticks()
+        dt = current_time - self.prev_time
+        self.prev_time = current_time
+        return dt / 1000
+
+
+
+
+
+
+
+
+
 class FlashingText(PureText):
     def __init__(self, text, size, color, **pos):
-        """
+        '''
         pos: refer to the attributes of pg.Rect
-        """
+        '''
         super().__init__(text, size, color, **pos)
-        self.time_count = 0
+        self.timer = Timer()
+        self.time_sum = 0.
 
     def update(self):
-        self.time_count = (self.time_count + 1) % flashing_period
+        self.time_sum += self.timer.dt()
+        if self.time_sum >= default_flashing_period: self.time_sum -= default_flashing_period
 
     def draw(self, screen):
-        if self.time_count < flashing_period // 2:
+        if self.time_sum < default_flashing_period / 2:
             screen.blit(self.text_surface, self.pos_rect)
 
 
@@ -69,19 +90,22 @@ class FlashingText(PureText):
 
 
 class FlashingImage():
-    def __init__(self, image, **pos):
-        """
+    def __init__(self, image, flashing_period=default_flashing_period, **pos):
+        '''
         pos: refer to the attributes of pg.Rect
-        """
+        '''
         self.image = image
         self.pos_rect = self.image.get_rect(**pos)
-        self.time_count = 0
+        self.timer = Timer()
+        self.flashing_period = flashing_period
+        self.time_sum = 0.
 
     def update(self):
-        self.time_count = (self.time_count + 1) % flashing_period
+        self.time_sum += self.timer.dt()
+        if self.time_sum >= self.flashing_period: self.time_sum -= self.flashing_period
 
     def draw(self, screen):
-        if self.time_count < flashing_period // 2:
+        if self.time_sum < self.flashing_period / 2:
             screen.blit(self.image, self.pos_rect)
 
 
@@ -93,13 +117,12 @@ class FlashingImage():
 
 
 class Score():
-    score_number = 0
-
     def __init__(self, size, color, **pos):
-        """
+        '''
         pos: refer to the attributes of pg.Rect
-        """
+        '''
         self.color = color
+        self.score_number = 0
         self.font = pg.font.Font(default_font, size)
         self.text_surface = self.font.render(f'Score  {self.score_number:{0}{4}}', True, pg.Color(self.color))
         self.pos_rect = self.text_surface.get_rect(**pos)
@@ -117,17 +140,15 @@ class Score():
 
 class CountDown():
     def __init__(self, time_remain, color, **pos):
-        """
+        '''
         time_remain: in second
         pos: refer to the attributes of pg.Rect
-        """
+        '''
         self.color = color
         self.time_remain = time_remain
         self.font = pg.font.Font(default_font, countdown_font_size)
         self.text_surface = self.font.render(f'{self.time_remain // 60}:{self.time_remain % 60:02}', True, pg.Color(self.color))
         self.pos_rect = self.text_surface.get_rect(**pos)
-
-    def start_tick(self):
         self.time_end = pg.time.get_ticks() + self.time_remain * 1000
 
     def update(self):
@@ -143,30 +164,32 @@ class CountDown():
 
 
 class Medal():
-    velocity = vec2(2, 0)
-
-    def __init__(self):
+    def __init__(self, mask_num, **pos):
         image_name = ['normal', 'activate', 'ground']
         self.images = []
         for i in range(3):
             self.images.append(
                 scaled_surface(pg.image.load(os.path.join(data_path, 'Medal', f'{image_name[i]}.png')), 0.28)
             )
-        self.pos_rect = self.images[0].get_rect(center=(400, 600 - 60))
+            self.images[i].set_masks(masks[mask_num])
+        self.pos_rect = self.images[0].get_rect(**pos)
+        self.centerx = self.pos_rect.centerx
         self.collision_rect = pg.Rect(self.pos_rect)
         self.collision_rect.height = 9
+        self.timer = Timer()
         self.to_draw = 0
+        self.connect_ground = False
+        self.time_end = 0
 
-    count_down = 0
     def set_highlight(self):
-        self.count_down = 5
+        self.time_end = pg.time.get_ticks() + medal_highlight_time
 
-    connect_ground = False
     def set_ground(self):
         self.connect_ground = True
 
-    def update(self, deltax):
-        self.pos_rect.center += deltax * self.velocity
+    def update(self, direction):
+        self.centerx += direction * velocity_of_medal * self.timer.dt()
+        self.pos_rect.centerx = self.centerx
         if self.pos_rect.centerx < 50:  self.pos_rect.centerx = 50
         if self.pos_rect.centerx > 750: self.pos_rect.centerx = 750
         self.collision_rect.centerx = self.pos_rect.centerx
@@ -174,11 +197,10 @@ class Medal():
         # image to draw
         if self.connect_ground:
             self.to_draw = 2
-        elif self.count_down == 0:
+        elif pg.time.get_ticks() + medal_highlight_time > self.time_end:
             self.to_draw = 0
         else:
             self.to_draw = 1
-            self.count_down -= 1
 
         self.connect_ground = False
 
@@ -190,14 +212,15 @@ class Medal():
 
 
 class MedalStatusBar():
-    # electric charge: [0, 100]
-    charge = 0
     color = ['green', 'yellow', 'darkorange', 'red2']
 
-    def __init__(self, center):
+    def __init__(self, center=None, topleft=None, topright=None):
         self.border = pg.Rect(0, 0, 20, 200)
-        self.border.center = center
+        if center: self.border.center = center
+        if topleft: self.border.topleft = topleft
+        if topright: self.border.topright = topright
         self.charge_bar = []
+        self.charge = 0 # electric charge: [0, 200]
         height = [60, 120, 160, 200]
         for i in range(4):
             rect = self.border.copy()
