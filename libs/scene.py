@@ -28,9 +28,10 @@ def startWithScene(s):
             if event.type == pg.QUIT:
                 quit_attempt = True
             elif event.type == pg.KEYDOWN:
-                alt_pressed = pressed_keys[pg.K_LALT] or \
-                              pressed_keys[pg.K_RALT]
-                if event.key == pg.K_F4 and alt_pressed:
+                alt_pressed = pressed_keys[pg.K_LALT] or pressed_keys[pg.K_RALT]
+                ctrl_pressed = pressed_keys[pg.K_LCTRL] or pressed_keys[pg.K_RCTRL]
+                if (event.key == pg.K_F4 and alt_pressed) or\
+                   (event.key == pg.K_w and ctrl_pressed):
                     quit_attempt = True
 
             if quit_attempt: current_scene.Terminate()
@@ -83,9 +84,9 @@ class TitleScene(SceneBase):
     # TODO: generate some photons on background
     # TODO: highscore (create a file to store the information)
     user_focus = 0 # 0: start, 1: help, 2: exit
-    enter_pressed = False
     background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'title_scene.png'))
 
+    enter_pressed = False
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.KEYDOWN:
@@ -184,18 +185,18 @@ class HelpScene(SceneBase):
 
 class LevelSelectScene(SceneBase):
     # TODO: generate some photons on background
-    level = 1
-    enter_pressed = False
-    esc_pressed = False
-    up_down_pressed = 0 # -1: down, 0: not, 1: up
     background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'level_scene.png'))
 
     def __init__(self):
         self.next = self
+        self.level = 1
         # [0]: 0->level, 1->mode
         # [1]: 0->classic, 1->advanced
         self.user_focus = [0, 0]
 
+    enter_pressed = False
+    esc_pressed = False
+    up_down_pressed = 0 # -1: down, 0: not, 1: up
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.KEYDOWN:
@@ -310,9 +311,6 @@ class GameBridgeScene(SceneBase):
 
 class GameScene(SceneBase):
     # TODO: press <esc> to stop the game
-    photons_per_line = 7 # should be odd number
-    photon_distance = 80
-    velocity_of_photon = vec2(0, 2)
     electron_valid_rect = pg.Rect(0, 400, 800, 200)
     background_image1 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(classic).png'))
     background_image2 = pg.image.load(os.path.join(data_path, 'backgrounds', 'game_scene(advanced).png'))
@@ -320,8 +318,8 @@ class GameScene(SceneBase):
 
     def new_photons(self):
         # parameters: center_pos, vel
-        return [ element.Photon((400 + self.photon_distance * i, 0), self.velocity_of_photon)\
-            for i in range(-self.photons_per_line//2+1, self.photons_per_line//2+1) ]
+        return [ element.Photon((400 + photon_distance * i, 0), velocity_of_photon)\
+            for i in range(-photons_per_line//2+1, photons_per_line//2+1) ]
 
     def __init__(self, level, charge_enabled):
         self.next = self
@@ -368,7 +366,7 @@ class GameScene(SceneBase):
                 photon.update_pos()
 
         # generate next_photons
-        if self.photons[-1][0].pos.centery >= self.photon_distance:
+        if self.photons[-1][0].pos.centery >= photon_distance:
             self.photons.append(self.new_photons())
 
         # update electron position
@@ -483,8 +481,6 @@ class EndBridgeScene(SceneBase):
 
 
 class EndScene(SceneBase):
-    user_focus = 0
-    enter_pressed = False
     background_image = pg.image.load(os.path.join(data_path, 'backgrounds', 'end_scene.png'))
 
     def __init__(self, score):
@@ -492,9 +488,11 @@ class EndScene(SceneBase):
         score: int
         """
         self.next = self
+        self.user_focus = 0
         self.score = score
         self.animation = EndAnimation(center=(230, 400))
 
+    enter_pressed = False
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.KEYDOWN:
