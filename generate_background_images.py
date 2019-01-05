@@ -69,7 +69,7 @@ tldr: Catch as many purple photons as you can!
 
    In this game, the player can use    and    to
 move his/her "Einstein". The "Einstein" is holding
-a medal upward in order to catch the photons
+a metal upward in order to catch the photons
 falling from the sky.
 
    By "photoelectric effect", photons that has a
@@ -79,13 +79,13 @@ faster, and your score is proportional to its
 velocity.
 '''.strip('\n').split('\n')
     lines2 = '''
-   However, different medal has different "work
+   However, different metal has different "work
 function", which is implemented as "Level" in this
 game. In short, electron won't be emitted if the
 frequency of the catched photon is too low.
 
 Advanced mode:
-   In reality, as the electron emitted, the medal
+   In reality, as the electron emitted, the metal
 will be charged, and thus harder for the next
 emission. In advanced mode, you will see a charge
 status bar on one side of the screen. The charge

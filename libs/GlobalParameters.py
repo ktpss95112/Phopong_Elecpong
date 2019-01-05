@@ -16,14 +16,14 @@ default_flashing_period = 1
 game_time = 31
 game_bridge_time = 1.99 * 1000
 end_bridge_time = 2.9 * 1000
-medal_highlight_time = 0.3
+metal_highlight_time = 0.3
 
 # objects
 line_of_horizon2 = 600 - 30
 photon_distance = 80
 photons_per_line = 7 # should be odd number
 velocity_of_photon = vec2(0, 2)
-velocity_of_medal = 100
+velocity_of_metal = 100
 
 # font size
 title_font_size = 150

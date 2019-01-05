@@ -288,26 +288,26 @@ class GameBridgeScene(SceneBase):
         # depend on num_of_player
         if num_of_player == 1:
             self.scores = [ Score(score_font_size, 'pink', topright=(800 - 15, 15)) ]
-            self.medals = [ Medal(0, center=(400, 600 - 60)) ]
-            self.medal_statuss = [ MedalStatusBar((800 - 35, 300)) ]
+            self.metals = [ Metal(0, center=(400, 600 - 60)) ]
+            self.metal_statuss = [ MetalStatusBar((800 - 35, 300)) ]
             self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
             self.lr_buttoms = [
-                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.medals[0].pos_rect.midleft),
-                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.medals[0].pos_rect.midright),
+                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.metals[0].pos_rect.midleft),
+                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.metals[0].pos_rect.midright),
             ]
         else:
             self.scores = [ Score(score_font_size, 'gold1', topright=(800 - 15, 15)),
                             Score(score_font_size, 'deepskyblue1', topleft=(15, 15)) ]
-            self.medals = [ Medal(1, center=(400 + 120, 600 - 60)),
-                            Medal(2, center=(400 - 120, 600 - 60)) ]
-            self.medal_statuss = [ MedalStatusBar((800 - 35, 300)),
-                                   MedalStatusBar((35, 300)) ]
+            self.metals = [ Metal(1, center=(400 + 120, 600 - 60)),
+                            Metal(2, center=(400 - 120, 600 - 60)) ]
+            self.metal_statuss = [ MetalStatusBar((800 - 35, 300)),
+                                   MetalStatusBar((35, 300)) ]
             self.countdown = CountDown(game_time, 'pink', midtop=(400, 25))
             self.lr_buttoms = [
-                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.medals[0].pos_rect.midleft),
-                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.medals[0].pos_rect.midright),
-                FlashingImage(self.A_buttom, flashing_period=0.5, midright=self.medals[1].pos_rect.midleft),
-                FlashingImage(self.D_buttom, flashing_period=0.5, midleft=self.medals[1].pos_rect.midright),
+                FlashingImage(self.l_buttom, flashing_period=0.5, midright=self.metals[0].pos_rect.midleft),
+                FlashingImage(self.r_buttom, flashing_period=0.5, midleft=self.metals[0].pos_rect.midright),
+                FlashingImage(self.A_buttom, flashing_period=0.5, midright=self.metals[1].pos_rect.midleft),
+                FlashingImage(self.D_buttom, flashing_period=0.5, midleft=self.metals[1].pos_rect.midright),
             ]
 
         self.time_end = pg.time.get_ticks() + game_bridge_time
@@ -328,12 +328,12 @@ class GameBridgeScene(SceneBase):
         screen.blit(self.background_image, self.background_image.get_rect())
 
         for i in range(self.num_of_player):
-            # medal status
+            # metal status
             if self.charge_enabled:
-                self.medal_statuss[i].draw(screen)
+                self.metal_statuss[i].draw(screen)
 
-            # medal
-            self.medals[i].draw(screen)
+            # metal
+            self.metals[i].draw(screen)
 
             # score
             self.scores[i].draw(screen)
@@ -388,16 +388,16 @@ class GameScene(SceneBase):
         # player[0] : right, player[1] : left
         if num_of_player == 1:
             self.scores = [ Score(score_font_size, 'pink', topright=(800 - 15, 15)) ]
-            self.medals = [ Medal(0, center=(400, 600 - 60)) ]
-            self.medal_statuss = [ MedalStatusBar((800 - 35, 300)) ]
+            self.metals = [ Metal(0, center=(400, 600 - 60)) ]
+            self.metal_statuss = [ MetalStatusBar((800 - 35, 300)) ]
             self.countdown = CountDown(game_time, 'pink', topleft=(15, 15))
         else:
             self.scores = [ Score(score_font_size, 'gold1', topright=(800 - 15, 15)),
                             Score(score_font_size, 'deepskyblue1', topleft=(15, 15)) ]
-            self.medals = [ Medal(1, center=(400 + 120, 600 - 60)),
-                            Medal(2, center=(400 - 120, 600 - 60)) ]
-            self.medal_statuss = [ MedalStatusBar((800 - 35, 300)),
-                                   MedalStatusBar((35, 300)) ]
+            self.metals = [ Metal(1, center=(400 + 120, 600 - 60)),
+                            Metal(2, center=(400 - 120, 600 - 60)) ]
+            self.metal_statuss = [ MetalStatusBar((800 - 35, 300)),
+                                   MetalStatusBar((35, 300)) ]
             self.countdown = CountDown(game_time, 'burlywood1', midtop=(400, 25))
 
 
@@ -415,11 +415,11 @@ class GameScene(SceneBase):
         if pressed_keys[pg.K_d]: self.a_d_pressed += 1
 
     def Update(self):
-        # update medal position
-        self.medals[0].update(self.left_right_pressed)
+        # update metal position
+        self.metals[0].update(self.left_right_pressed)
         self.left_right_pressed = 0
         if self.num_of_player == 2:
-            self.medals[1].update(self.a_d_pressed)
+            self.metals[1].update(self.a_d_pressed)
             self.a_d_pressed = 0
 
         # update photon position
@@ -442,18 +442,18 @@ class GameScene(SceneBase):
             remove_this = False
             if photon.inside(self.horizon_rect2): remove_this = True
             for i in range(self.num_of_player):
-                if photon.collide_with(self.medals[i].collision_rect):
+                if photon.collide_with(self.metals[i].collision_rect):
                     remove_this = True
                     increment = 0
                     if (not self.charge_enabled) and photon.color_n >= self.level:
                         increment = photon.color_n
                     elif self.charge_enabled and photon.color_n >= self.level:
-                        increment = photon.color_n * (1 - self.medal_statuss[i].charge / 200)
+                        increment = photon.color_n * (1 - self.metal_statuss[i].charge / 200)
 
                     if increment != 0:
-                        self.medals[i].set_highlight()
+                        self.metals[i].set_highlight()
                         self.scores[i].update(int(6 * 5 * increment))
-                        self.medal_statuss[i].update(3 * photon.color_n)
+                        self.metal_statuss[i].update(3 * photon.color_n)
                         self.generate_electron(photon.pos.center, vec2(0, -increment))
 
             if remove_this: self.photons[0].remove(photon)
@@ -462,9 +462,9 @@ class GameScene(SceneBase):
 
         # ground (recharge)
         for i in range(self.num_of_player):
-            if self.medals[i].pos_rect.collidelist([ self.ground.pos_rect_l, self.ground.pos_rect_r ]) != -1:
-                self.medal_statuss[i].update(-5)
-                self.medals[i].set_ground()
+            if self.metals[i].pos_rect.collidelist([ self.ground.pos_rect_l, self.ground.pos_rect_r ]) != -1:
+                self.metal_statuss[i].update(-5)
+                self.metals[i].set_ground()
 
         # update timer
         self.countdown.update()
@@ -483,12 +483,12 @@ class GameScene(SceneBase):
         pg.draw.rect(screen, pg.Color('chocolate4'), self.horizon_rect2)
 
         for i in range(self.num_of_player):
-            # medal status
+            # metal status
             if self.charge_enabled:
-                self.medal_statuss[i].draw(screen)
+                self.metal_statuss[i].draw(screen)
 
-            # medal
-            self.medals[i].draw(screen)
+            # metal
+            self.metals[i].draw(screen)
 
             # score
             self.scores[i].draw(screen)

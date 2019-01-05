@@ -12,8 +12,8 @@ __all__ = [
     'FlashingImage',
     'Score',
     'CountDown',
-    'Medal',
-    'MedalStatusBar',
+    'Metal',
+    'MetalStatusBar',
     'Ground',
     'EndAnimation',
 ]
@@ -163,13 +163,13 @@ class CountDown():
 
 
 
-class Medal():
+class Metal():
     def __init__(self, mask_num, **pos):
         image_name = ['normal', 'activate', 'ground']
         self.images = []
         for i in range(3):
             self.images.append(
-                scaled_surface(pg.image.load(os.path.join(data_path, 'Medal', f'{image_name[i]}.png')), 0.28)
+                scaled_surface(pg.image.load(os.path.join(data_path, 'Metal', f'{image_name[i]}.png')), 0.28)
             )
             self.images[i].set_masks(masks[mask_num])
         self.pos_rect = self.images[0].get_rect(**pos)
@@ -182,13 +182,13 @@ class Medal():
         self.time_end = 0
 
     def set_highlight(self):
-        self.time_end = pg.time.get_ticks() + medal_highlight_time
+        self.time_end = pg.time.get_ticks() + metal_highlight_time
 
     def set_ground(self):
         self.connect_ground = True
 
     def update(self, direction):
-        self.centerx += direction * velocity_of_medal * self.timer.dt()
+        self.centerx += direction * velocity_of_metal * self.timer.dt()
         self.pos_rect.centerx = self.centerx
         if self.pos_rect.centerx < 50:  self.pos_rect.centerx = 50
         if self.pos_rect.centerx > 750: self.pos_rect.centerx = 750
@@ -197,7 +197,7 @@ class Medal():
         # image to draw
         if self.connect_ground:
             self.to_draw = 2
-        elif pg.time.get_ticks() + medal_highlight_time > self.time_end:
+        elif pg.time.get_ticks() + metal_highlight_time > self.time_end:
             self.to_draw = 0
         else:
             self.to_draw = 1
@@ -211,7 +211,7 @@ class Medal():
 
 
 
-class MedalStatusBar():
+class MetalStatusBar():
     color = ['green', 'yellow', 'darkorange', 'red2']
 
     def __init__(self, center):
@@ -226,7 +226,7 @@ class MedalStatusBar():
             rect.bottom = self.border.bottom
             self.charge_bar.append(rect)
         self.text2 = PureText('Status', 25, 'gray90', midbottom=self.border.midtop)
-        self.text1 = PureText('Medal', 25, 'gray90', midbottom=self.text2.pos_rect.midtop)
+        self.text1 = PureText('Metal', 25, 'gray90', midbottom=self.text2.pos_rect.midtop)
 
     def update(self, increment):
         self.charge += increment
